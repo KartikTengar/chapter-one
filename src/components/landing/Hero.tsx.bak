@@ -1,0 +1,180 @@
+"use client";
+
+import { useReducedMotion } from "framer-motion";
+import { FloatingCard } from "./FloatingCard";
+import { ScrollIndicator } from "./ScrollIndicator";
+
+/* ── HeroMedia ──────────────────────────────────────────────
+  Isolated hero media container designed around a real
+  photographic asset (college students, candid, energetic,
+  cinematic lighting).
+
+  Props:
+    src?   — local path, e.g. "/images/hero.jpg"
+           falls through to tasty placeholder if missing
+    alt    — describe the scene for accessibility
+
+  behaviour:
+    - object-cover, aspect-[16/10] on desktop, responsive on mobile
+    - subtle dark gradient overlay for typography readability
+    - no layout shift — explicit dimensions + transition
+    - mobile-aware object-position
+    - supports next/Image swap via src prop
+    - reduced-motion safe (opacity only)
+  ────────────────────────────────────────────────────────── */
+
+type HeroMediaProps = {
+  /** local image path, e.g. "/images/hero.jpg" */
+  src?: string;
+  /** alt attribute for the image */
+  alt?: string;
+};
+
+function HeroMedia({ src, alt = "College students celebrating at an evening event, candid and energetic, cinematic lighting, dark moody environment with depth and negative space for typography" }: HeroMediaProps) {
+  return (
+    <div
+      className="relative w-full aspect-[16/10] rounded-[32px] overflow-hidden transition-[height] dur-700 ease-out"
+      style={{}}
+    >
+      {/* Subtle gradient overlay for typography readability — strength varies by breakpoint */}
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-[var(--background)] via-amber-950/50 to-transparent"
+      />
+
+      {/* Dynamic source: real photo or refined placeholder */}
+      <div className="relative w-full aspect-[16/10] overflow-hidden">
+        {src ? (
+          <img
+            src={src}
+            alt={alt}
+            className="w-full h-full object-cover object-center transition-opacity dur-500"
+            style={{ opacity: 0.7 }}
+            loading="lazy"
+          />
+        ) : (
+          /* Refined placeholder — dark moody gradients with warm accent hint,
+             negative space for typography, no complex SVG filters */
+          <div className="relative w-full h-full bg-gradient-to-br from-amber-950/80 via-amber-900/90 to-amber-950/80">
+            {/* Warm accent glow for cinematic feel */}
+            <div
+              className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500] h-[500] bg-amber-500/10 rotate-4 rounded-full"
+            />
+            {/* Deep shadow for dimension */}
+            <div
+              className="absolute bottom-0 right-0 w-[300] h-[300] bg-black/40 opacity-70 rotate-3 translate-x-2 translate-y-2"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Subtle overlay for text readability — md:opacity-95 shows on desktop, less on mobile */}
+      <div
+        className="absolute inset-0 bg-gradient-to-t from-[var(--background)]/70 via-transparent to-[var(--background)]/90 opacity-0 md:opacity-85"
+      />
+    </div>
+  );
+}
+
+/* ── Hero ──────────────────────────────────────────────── */
+
+export function Hero() {
+  const reducedMotion = useReducedMotion();
+
+  return (
+    <section
+      className="relative min-h-[calc(100vh) overflow-hidden]"
+      aria-label="Hero section"
+    >
+      {/* ── Isolated hero media ── */}
+      <HeroMedia />
+
+      {/* Floating cards - positioned asymmetrically, scaled for art direction */}
+      <FloatingCard variant="date" tilt={6} delay={0.2} />
+      <FloatingCard variant="badge" tilt={-5} delay={0.5} />
+      <FloatingCard variant="location" tilt={3} delay={0.8} />
+      <FloatingCard variant="photostrip" delay={1.1} />
+
+      {/* Headline + supporting text */}
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-16 md:py-24">
+        <div className="grid lg:grid-cols-2 gap-8 items-center">
+          {/* Left: typography column */}
+          <div className="flex flex-col gap-4 md:gap-6">
+            {/* Eyebrow */}
+            <p
+              className="uppercase text-zinc-400 text-sm tracking-widest border-b border-white/[0.03] pb-1 md:text-base"
+            >
+              FRESHERS 2026
+            </p>
+
+            {/* Main headline - cinematic, dominant, with intentional line breaks */}
+            <h1 className="
+              text-[var(--foreground)]
+              font-extrabold
+              tracking-[0.1em]
+              uppercase
+              sm:tracking-[0.15em]
+              clamp-[5rem_14vw_10rem]
+              leading-none
+              md:leading-none
+            >
+              YOUR FIRST
+              <br />
+              CHAPTER
+              <br />
+              STARTS HERE
+            </h1>
+
+            {/* Supporting text */}
+            <p className="text-zinc-400 text-base sm:text-lg leading-relaxed max-w-xl">
+              A new campus. New people. New memories. One unforgettable beginning.
+            </p>
+
+            {/* CTA Container */}
+            <div className="mt-6 flex flex-col sm:flex-row gap-4 md:gap-6 items-center">
+              <a
+                href="#attend"
+                className="
+                  rounded-full px-6 py-3.5 bg-[var(--accent)] text-[var(--background)] font-medium text-base sm:text-lg
+                  transition-all hover:bg-opacity-90 focus-visible:outline-none
+                  focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2
+                  active:scale-[0.98]
+                "
+                aria-label="Attend the event"
+              >
+                ENTER THE EXPERIENCE
+              </a>
+
+              <a
+                href="#gallery"
+                className="
+                  rounded-full px-6 py-3.5 bg-transparent border border-white/[0.15] text-[var(--foreground)] font-medium text-base sm:text-lg transition-colors hover:bg-opacity-5 focus-visible:outline-none
+                  focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2
+                "
+                aria-label="View gallery"
+              >
+                VIEW GALLERY
+              </a>
+            </div>
+          </div>
+
+          {/* Right: subtle semi-transparent panel that feels part of the composition, desktop only */}
+          <div className="lg:block hidden md:block flex items-center justify-center">
+            <div
+              className="
+                rounded-2xl bg-[var(--background)]/55 backdrop-blur-md border border-white/[0.03]
+                p-4 md:p-6
+              "
+            >
+              <p className="text-sm text-zinc-400 uppercase tracking-wider">
+                1200+ FRESHERS EXPECTED
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Scroll indicator at bottom — only on desktop, reduced motion aware */}
+        {!reducedMotion && <ScrollIndicator />}
+      </div>
+    </section>
+  );
+}

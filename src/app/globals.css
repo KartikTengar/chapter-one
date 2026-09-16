@@ -1,0 +1,230 @@
+@import "tailwindcss";
+
+/* ── Unified Layout System ────────────────────────────────
+   CHAPTER ONE landing page — cinematic event invitation.
+   - Strict responsive system with max-width containers
+   - Controlled typography with clamp()
+   - Cinematic background with warm glow, vignette, grain
+   - Gold accent used sparingly as emphasis
+   ────────────────────────────────────────────────────────── */
+
+:root {
+  --background: #0B0D15;
+  --foreground: #ede9e0;
+  --accent: #f5d06e;
+  --accent-dim: rgba(245, 208, 110, 0.12);
+  --surface: #121620;
+  --muted: #788aa5;
+  --muted-soft: #6b80a0;
+}
+
+/* ── Container System ────────────────────────────────────
+   All major sections use the same container.
+   Mobile: full width, 16px side padding
+   Tablet: 24px side padding
+   Desktop: max-width 1400px, 48px side padding
+   ────────────────────────────────────────────────────────── */
+
+.max-container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 16px;
+}
+
+@media (min-width: 768px) {
+  .max-container {
+    padding-inline: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .max-container {
+    max-width: 1400px;
+    padding-inline: 48px;
+  }
+}
+
+/* ── Vertical Rhythm Scale (8px base) ──────────────────── */
+:root {
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+}
+
+/* ── Base ──────────────────────────────────────────────── */
+html,
+body,
+body #__next,
+main {
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Cinematic Background Depth ──────────────────
+   Warm radial glow + subtle grain on body::before.
+   Vignette on body::after.
+   ────────────────────────────────────────────────────────── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.025;
+  background:
+    radial-gradient(ellipse at 70% 20%, rgba(245, 208, 110, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 30% 80%, rgba(245, 208, 110, 0.03) 0%, transparent 40%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-blend-mode: normal, normal, overlay;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+/* ── Focus Visible ─────────────────────────────────────── */
+*:focus-visible {
+  outline: none;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Reduced Motion ────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Section Base ──────────────────────────────────────── */
+section {
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Hero Section ──────────────────────────────────────── */
+.hero-section {
+  min-height: 100vh;
+  background: var(--background);
+}
+
+/* ── Glass Card (for event cards) ──────────────────────── */
+.event-card {
+  background: rgba(10, 12, 18, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+}
+
+/* ── Typography ────────────────────────────────────────── */
+.headline-display {
+  font-size: clamp(4.5rem, 7vw, 7rem);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.eyebrow-text {
+  font-size: clamp(0.75rem, 1vw + 0.4rem, 0.9rem);
+  letter-spacing: 0.2em;
+  font-weight: 600;
+}
+
+.supporting-text {
+  font-size: clamp(1rem, 1.2vw + 0.6rem, 1.25rem);
+  line-height: 1.7;
+}
+
+/* ── Horizontal Rule ───────────────────────────────────── */
+hr {
+  border-color: var(--muted-soft);
+  margin-block: var(--space-6);
+}
+
+/* ── Dashboard ──────────────────────────────────────────── */
+.dashboard-main {
+  overflow-x: hidden;
+}
+
+.dashboard-scroll {
+  overflow-y: auto;
+}
+
+/* ── Skeleton Loader ────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Glass Card (for event cards) ──────────────────────── */
+.event-card {
+  background: rgba(10, 12, 18, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+}
+
+/* ── Dashboard Surface Card ─────────────────────────────── */
+.dashboard-card {
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
