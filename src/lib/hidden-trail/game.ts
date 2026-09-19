@@ -151,7 +151,7 @@ export async function getGameConfig(): Promise<GameConfig | null> {
   const { data: game, error } = await supabase
     .from("qr_games")
     .select("*")
-    .eq("is_current", true)
+    .eq("slug", "hidden-trail")
     .maybeSingle();
   if (error || !game) return null;
   return game as GameConfig;

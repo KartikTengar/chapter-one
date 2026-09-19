@@ -151,7 +151,8 @@ export function HiddenTrailScannerClient() {
       const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
       const base64 = dataUrl.split(",")[1];
 
-      const res = await fetch("/api/v1/trail/vision-decode", {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "";
+      const res = await fetch(`${apiBase}/api/v1/trail/vision-decode`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -430,8 +431,8 @@ export function HiddenTrailScannerClient() {
     : "SCANNING";
 
   return (
-    <div className="bg-[var(--background)]">
-      <div className="max-container mx-auto px-4 py-8 md:py-12">
+    <div className="bg-[var(--background)] min-h-screen">
+      <div className="max-container mx-auto px-4 py-6 md:py-10">
         <div className="text-center mb-6">
           <p className="label mb-3">HIDDEN TRAIL</p>
           <h1 className="text-3xl md:text-4xl font-black text-[var(--foreground)] uppercase tracking-tight">
@@ -445,7 +446,7 @@ export function HiddenTrailScannerClient() {
           </p>
         </div>
 
-        <div className="mx-auto max-w-md">
+        <div className="mx-auto max-w-full sm:max-w-md">
           <div className="bg-[var(--surface)] border border-white/[0.06] rounded-2xl overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
               <span className="text-xs font-bold uppercase tracking-widest text-[var(--foreground)]">
@@ -460,7 +461,7 @@ export function HiddenTrailScannerClient() {
               </button>
             </div>
 
-            <div className="relative bg-black aspect-[3/4] max-h-[60vh] w-full overflow-hidden">
+            <div className="relative w-full bg-black" style={{ aspectRatio: "4/3" }}>
               <video
                 ref={videoRef}
                 className="absolute inset-0 h-full w-full object-cover"
@@ -473,11 +474,13 @@ export function HiddenTrailScannerClient() {
 
               {(status === "scanning" || status === "processing") && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden="true">
-                  <div className="relative h-56 w-56 sm:h-64 sm:w-64">
-                    <div className="absolute top-0 left-0 h-8 w-8 border-t-2 border-l-2 border-[var(--accent)] rounded-tl-xl" />
-                    <div className="absolute top-0 right-0 h-8 w-8 border-t-2 border-r-2 border-[var(--accent)] rounded-tr-xl" />
-                    <div className="absolute bottom-0 left-0 h-8 w-8 border-b-2 border-l-2 border-[var(--accent)] rounded-bl-xl" />
-                    <div className="absolute bottom-0 right-0 h-8 w-8 border-b-2 border-r-2 border-[var(--accent)] rounded-br-xl" />
+                  <div className="relative" style={{ width: "70%", aspectRatio: "1/1", maxWidth: "320px" }}>
+                    <div className="absolute inset-0 border-2 border-[var(--accent)] rounded-xl" />
+                    <div className="absolute top-0 left-0 h-10 w-10 border-t-2 border-l-2 border-[var(--accent)] rounded-tl-xl" />
+                    <div className="absolute top-0 right-0 h-10 w-10 border-t-2 border-r-2 border-[var(--accent)] rounded-tr-xl" />
+                    <div className="absolute bottom-0 left-0 h-10 w-10 border-b-2 border-l-2 border-[var(--accent)] rounded-bl-xl" />
+                    <div className="absolute bottom-0 right-0 h-10 w-10 border-b-2 border-r-2 border-[var(--accent)] rounded-br-xl" />
+                    <div className="absolute left-0 right-0 top-0 h-1 bg-[var(--accent)] animate-scan-line rounded-t-xl" style={{ animationDuration: "2s" }} />
                   </div>
                 </div>
               )}
@@ -549,11 +552,11 @@ export function HiddenTrailScannerClient() {
               )}
 
               {(status === "scanning" || error.type === "not-trail-qr") && (
-                <div className="absolute bottom-4 left-4 right-4 flex justify-center">
+                <div className="absolute bottom-4 left-4 right-4 flex flex-col items-center gap-2">
                   <button
                     onClick={triggerVisionFallback}
                     disabled={visionStatus === "loading" || visionCallCountRef.current >= MAX_VISION_CALLS}
-                    className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                    className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] w-full max-w-xs ${
                       visionStatus === "loading"
                         ? "bg-amber-500/20 border border-amber-500/30 text-amber-400 cursor-wait"
                         : visionCallCountRef.current >= MAX_VISION_CALLS
@@ -585,7 +588,7 @@ export function HiddenTrailScannerClient() {
                     )}
                   </button>
                   {visionCallCountRef.current > 0 && visionCallCountRef.current < MAX_VISION_CALLS && (
-                    <span className="ml-3 text-xs text-zinc-500">
+                    <span className="text-xs text-zinc-500">
                       Vision used: {visionCallCountRef.current}/{MAX_VISION_CALLS}
                     </span>
                   )}
@@ -597,7 +600,7 @@ export function HiddenTrailScannerClient() {
               <p className="text-center text-xs text-zinc-500 uppercase tracking-widest">
                 {status === "scanning" ? "Align the QR inside the frame" : "Point at a Hidden Trail QR marker"}
               </p>
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center justify-center gap-3 flex-wrap">
                 {status === "scanning" ? (
                   <>
                     <button
@@ -648,6 +651,22 @@ export function HiddenTrailScannerClient() {
           </div>
         </div>
       </div>
+      <style jsx>{`
+        @keyframes scan-line {
+          0% { top: 0%; opacity: 1; }
+          50% { top: 100%; opacity: 1; }
+          100% { top: 0%; opacity: 1; }
+        }
+        .animate-scan-line {
+          animation: scan-line 2s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-scan-line {
+            animation: none;
+            opacity: 0.5;
+          }
+        }
+      `}</style>
     </div>
   );
 }

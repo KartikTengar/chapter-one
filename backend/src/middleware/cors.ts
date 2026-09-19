@@ -4,7 +4,7 @@ import type { Context } from 'koa';
 export function createCorsMiddleware() {
   const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
-    : ['http://localhost:3000', 'http://localhost:3001', 'https://chapter-one.vercel.app'];
+    : ['http://localhost:3000', 'http://localhost:3001', 'https://chapter-one-xi.vercel.app'];
 
   return KoaCors({
     origin: (ctx: Context) => {
