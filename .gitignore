@@ -21,6 +21,21 @@
 /build
 /dist
 
+# Google Cloud credentials
+.vision/
+.vision/*.json
+
+# service account / credentials
+*service-account*.json
+*credentials*.json
+*google*credentials*.json
+*service*account*.json
+
+# env files (can opt-in for committing if needed)
+.env*
+!.env.example
+!.env.local.example
+
 # misc
 .DS_Store
 *.pem
