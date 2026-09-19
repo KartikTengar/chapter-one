@@ -22,6 +22,7 @@ export function QrCode({
   /** Absolute origin for the QR payload (e.g. "https://app.example.com"). 
    *  If omitted, falls back to window.location.origin (client-side only). 
    *  For server-side rendering/printing, always pass the production origin explicitly. */
+  origin?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 

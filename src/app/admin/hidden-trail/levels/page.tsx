@@ -4,22 +4,7 @@ import { useEffect, useState } from "react";
 import { HiddenTrailAdminShell } from "@/components/admin/hidden-trail/HiddenTrailAdminShell";
 import { getClientAdminUser } from "@/lib/hidden-trail/admin-client";
 import { useRouter } from "next/navigation";
-
-interface Level {
-  id: string;
-  game_id: string;
-  level_number: number;
-  token: string;
-  title: string;
-  location_riddle: string;
-  answer_riddle: string;
-  answer_hash: string;
-  case_sensitive: boolean;
-  admin_location: string | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import { GameLevel } from "@/lib/hidden-trail/game";
 
 export default function LevelsPage() {
   const router = useRouter();
@@ -29,7 +14,7 @@ export default function LevelsPage() {
   >(null);
   const [loading, setLoading] = useState(true);
   const [hasGame, setHasGame] = useState<boolean | null>(null);
-  const [levels, setLevels] = useState<Level[]>([]);
+  const [levels, setLevels] = useState<GameLevel[]>([]);
   const [editingLevelId, setEditingLevelId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{
     title: string;
@@ -94,7 +79,7 @@ export default function LevelsPage() {
     }
   };
 
-  const startEdit = (level: Level) => {
+  const startEdit = (level: GameLevel) => {
     setEditingLevelId(level.id);
     setEditForm({
       title: level.title,
@@ -147,7 +132,7 @@ export default function LevelsPage() {
 
   if (loading) return null;
 
-  const renderLevelRow = (level: Level) => {
+  const renderLevelRow = (level: GameLevel) => {
     if (editingLevelId === level.id) {
       return (
         <tr key={level.id}>
@@ -200,7 +185,6 @@ export default function LevelsPage() {
               <span>Active</span>
             </label>
           </td>
-          <td>—</td>
           <td>{level.token ? "••••••••••••••••••••" : "—"}</td>
           <td>
             <button
@@ -231,17 +215,10 @@ export default function LevelsPage() {
         <td>
           {level.is_active ? "ACTIVE" : <span>PAUSED</span>}
         </td>
-        <td>{level.points ?? "—"}</td>
         <td>
           {level.token ? "••••••••••••••••••••" : "—"}
         </td>
         <td>
-          <button
-            className="chapter-admin-btn"
-            onClick={() => startEdit(level)}
-          >
-            Edit
-          </button>
           <button
             className="chapter-admin-btn"
             onClick={() => toggle(level.id, level.is_active)}
@@ -291,7 +268,6 @@ export default function LevelsPage() {
                   <th>LOCATION RIDDLE</th>
                   <th>ANSWER RIDDLE</th>
                   <th>STATUS</th>
-                  <th>POINTS</th>
                   <th>QR TOKEN</th>
                   <th>ACTIONS</th>
                 </tr>

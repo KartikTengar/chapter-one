@@ -4,6 +4,8 @@ import { getRegisteredEventIds } from "@/lib/supabase/dashboard";
 import { requireUser } from "@/lib/supabase/server";
 import { EventsContent, EventsLoading } from "@/components/events/EventsContent";
 
+export const dynamic = 'force-dynamic';
+
 export default async function EventsPage() {
   const [allEvents, user] = await Promise.all([
     getEventsList(),

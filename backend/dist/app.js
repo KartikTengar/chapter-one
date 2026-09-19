@@ -14,6 +14,7 @@ import { trailRouter } from './controllers/trail.js';
 import { photoRouter } from './controllers/photos.js';
 import { galleryRouter } from './controllers/gallery.js';
 import { adminRouter } from './controllers/admin.js';
+import { gameManagementRouter } from './controllers/game-management.js';
 export function createApp() {
     const app = new Koa();
     // Middleware stack (order matters)
@@ -49,7 +50,8 @@ export function createApp() {
     app.use(galleryRouter.allowedMethods());
     app.use(adminRouter.routes());
     app.use(adminRouter.allowedMethods());
-    // Error handling (must be last)
+    app.use(gameManagementRouter.routes());
+    app.use(gameManagementRouter.allowedMethods());
     app.use(createErrorMiddleware());
     return app;
 }

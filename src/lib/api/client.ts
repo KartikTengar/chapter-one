@@ -22,7 +22,14 @@ function resolveApiBaseUrl(): string {
   return "http://localhost:3001";
 }
 
-export const API_BASE_URL = resolveApiBaseUrl();
+let _apiBaseUrl: string | null = null;
+
+export function getApiBaseUrl(): string {
+  if (_apiBaseUrl === null) {
+    _apiBaseUrl = resolveApiBaseUrl();
+  }
+  return _apiBaseUrl;
+}
 
 async function getClientAuthHeaders(): Promise<Record<string, string>> {
   // Attach the Supabase session token to Koa requests when running in the browser.
@@ -40,7 +47,7 @@ async function getClientAuthHeaders(): Promise<Record<string, string>> {
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const authHeaders = await getClientAuthHeaders();
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',

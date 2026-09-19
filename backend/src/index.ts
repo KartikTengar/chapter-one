@@ -1,18 +1,23 @@
 import { createApp } from './app.js';
+import { createServer } from 'node:http';
 
-const PORT = process.env.PORT || 3001;
+const PORT = Number(process.env.PORT || 3001);
 
 async function startServer() {
   const app = createApp();
   
-  app.listen(PORT, () => {
+  const server = createServer(app.callback());
+  
+  server.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 CHAPTER ONE API server running on http://localhost:${PORT}`);
   });
   
   // Graceful shutdown
   const shutdown = async () => {
     console.log('🛑 Received shutdown signal');
-    process.exit(0);
+    server.close(() => {
+      process.exit(0);
+    });
   };
   
   process.on('SIGINT', shutdown);

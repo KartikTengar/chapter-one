@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import { API_BASE_URL } from "./client";
+import { getApiBaseUrl } from "./client";
 
 async function authHeaders(): Promise<Record<string, string>> {
   try {
@@ -18,7 +18,7 @@ async function authHeaders(): Promise<Record<string, string>> {
 
 async function trailFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = await authHeaders();
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -41,7 +41,7 @@ async function trailFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 async function trailFetchForm<T>(path: string, form: FormData): Promise<T> {
   const headers = await authHeaders();
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await fetch(`${getApiBaseUrl()}${path}`, {
     method: "POST",
     headers,
     body: form,

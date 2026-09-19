@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { getSupabaseAdmin, requireUser } from '../services/supabase.js';
 import { resolveHiddenTrailGame, getParticipant, getProfile, logScan, publishCompletion, } from '../services/trail.js';
 import { calculateStreak, deriveDisplayName } from '../utils/trail.js';
+import { decodeQrFromImage, isVisionAvailable } from '../services/vision.js';
 function getAdmin() {
     const admin = getSupabaseAdmin();
     if (!admin)
@@ -14,6 +15,31 @@ const answerSchema = z.object({
     token: z.string().min(8).max(256),
     answer: z.string().min(1).max(200),
 });
+const TOKEN_PATTERN = /^[A-Za-z0-9._~-]{8,256}$/;
+function extractTrailToken(data) {
+    const trimmed = data.trim();
+    if (!trimmed)
+        return null;
+    try {
+        if (/^https?:\/\//i.test(trimmed)) {
+            const url = new URL(trimmed);
+            // Only accept URLs with the exact Hidden Trail scan path
+            const m = url.pathname.match(/^\/hidden-trail\/scan\/([^/]+)\/?$/);
+            if (m && TOKEN_PATTERN.test(decodeURIComponent(m[1])))
+                return decodeURIComponent(m[1]);
+            return null;
+        }
+        const m = trimmed.match(/^\/?hidden-trail\/scan\/([^/?#]+)\/?$/);
+        if (m && TOKEN_PATTERN.test(decodeURIComponent(m[1])))
+            return decodeURIComponent(m[1]);
+        if (TOKEN_PATTERN.test(trimmed))
+            return trimmed;
+        return null;
+    }
+    catch {
+        return null;
+    }
+}
 const NOT_CONFIGURED = {
     code: "GAME_NOT_CONFIGURED",
     message: "Hidden Trail isn't configured yet.",
@@ -106,6 +132,87 @@ trailRouter.get("/scan/:token", async (ctx) => {
         case_sensitive: result?.case_sensitive ?? false,
         error_message: result?.error_message ?? null,
     };
+});
+/** POST /api/v1/trail/vision-decode
+ *  Google Cloud Vision fallback for QR decoding.
+ *  Only called when client-side jsQR fails.
+ *  Rate-limited and credentials server-only.
+ */
+const visionSchema = z.object({
+    image: z.string().min(100),
+    mime: z.enum(['image/jpeg', 'image/png', 'image/webp']).default('image/jpeg'),
+});
+// In-memory rate limiter for Vision calls per user
+const visionRateLimiter = new Map();
+const VISION_RATE_LIMIT = 5; // max requests per window
+const VISION_RATE_WINDOW_MS = 60_000; // 1 minute window
+function checkVisionRateLimit(userId) {
+    const now = Date.now();
+    const entry = visionRateLimiter.get(userId);
+    if (!entry || now > entry.resetAt) {
+        visionRateLimiter.set(userId, { count: 1, resetAt: now + VISION_RATE_WINDOW_MS });
+        return { allowed: true };
+    }
+    if (entry.count >= VISION_RATE_LIMIT) {
+        return { allowed: false, retryAfter: Math.ceil((entry.resetAt - now) / 1000) };
+    }
+    entry.count += 1;
+    return { allowed: true };
+}
+trailRouter.post("/vision-decode", async (ctx) => {
+    if (!isVisionAvailable()) {
+        ctx.status = 503;
+        ctx.body = { error: { code: "VISION_UNAVAILABLE", message: "Vision fallback not configured" } };
+        return;
+    }
+    const admin = getAdmin();
+    const userId = ctx.state.user.id;
+    const rateLimit = checkVisionRateLimit(userId);
+    if (!rateLimit.allowed) {
+        ctx.status = 429;
+        ctx.body = {
+            error: {
+                code: "VISION_RATE_LIMITED",
+                message: `Vision rate limit exceeded. Try again in ${rateLimit.retryAfter}s.`,
+            },
+        };
+        return;
+    }
+    const parsed = visionSchema.safeParse(ctx.request.body);
+    if (!parsed.success) {
+        ctx.status = 400;
+        ctx.body = { error: { code: "VALIDATION_FAILED", message: "Image data required" } };
+        return;
+    }
+    const { image, mime } = parsed.data;
+    // Decode base64 image
+    let imageBuffer;
+    try {
+        imageBuffer = Buffer.from(image, 'base64');
+    }
+    catch {
+        ctx.status = 400;
+        ctx.body = { error: { code: "INVALID_IMAGE", message: "Invalid base64 image data" } };
+        return;
+    }
+    // Basic size limit: 8MB
+    if (imageBuffer.length > 8 * 1024 * 1024) {
+        ctx.status = 400;
+        ctx.body = { error: { code: "IMAGE_TOO_LARGE", message: "Image must be under 8 MB" } };
+        return;
+    }
+    const visionResult = await decodeQrFromImage(imageBuffer, mime);
+    if (!visionResult?.text) {
+        ctx.body = { decoded: null };
+        return;
+    }
+    // Apply the SAME strict token parser as the client
+    const token = extractTrailToken(visionResult.text);
+    if (!token) {
+        ctx.body = { decoded: null, rejected: "NOT_A_TRAIL_QR" };
+        return;
+    }
+    ctx.body = { decoded: token, confidence: visionResult.confidence };
 });
 /** POST /api/v1/trail/answer */
 trailRouter.post("/answer", async (ctx) => {

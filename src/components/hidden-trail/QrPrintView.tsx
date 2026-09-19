@@ -15,11 +15,12 @@ export function QrPrintView({
   locationRiddle?: string | null;
   /** Absolute origin for the QR payload (e.g. "https://app.example.com").
    *  Falls back to NEXT_PUBLIC_APP_URL env var, then window.location.origin. */
+  origin?: string;
 }) {
   // Resolve origin: explicit prop > NEXT_PUBLIC_APP_URL env > window.location.origin
-  const resolvedOrigin = origin ?? 
-    (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_APP_URL) ?? 
-    (typeof window !== "undefined" ? window.location.origin : "");
+  const envOrigin = (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_APP_URL) || undefined;
+  const windowOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  const resolvedOrigin = origin ?? envOrigin ?? windowOrigin;
 
   return (
     <div className="chapter-qr-print-container">
