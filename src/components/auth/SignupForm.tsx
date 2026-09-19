@@ -1,190 +1,74 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { signUp } from "@/lib/supabase/auth";
+import { useRef, useState, type FormEvent } from "react";
+import { signUp, getAuthErrorMessage } from "@/lib/supabase/auth";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { PasswordField } from "./PasswordField";
+import { FormMessage } from "./FormMessage";
+import { validateEmail, validatePasswords, hasErrors, focusFirstError, type FieldErrors } from "./validation";
+import styles from "./AuthShell.module.scss";
 
 export function SignupForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const urlError = searchParams.get("error");
-  const urlMessage = searchParams.get("message");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState(() =>
-    urlError
-      ? urlError === "confirmation_failed"
-        ? "Email confirmation failed. Please try again."
-        : urlError === "missing_code"
-        ? "Invalid confirmation link. Please sign up again."
-        : "An error occurred. Please try again."
-      : ""
-  );
-  const [message, setMessage] = useState(urlMessage ?? "");
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [error, setError] = useState("");
+  const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const submitting = useRef(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (submitting.current) return;
+    const validation: FieldErrors = {
+      fullName: !fullName.trim() || fullName.trim().length > 100 ? "Enter your full name (up to 100 characters)." : undefined,
+      email: validateEmail(email),
+      ...validatePasswords(password, confirmPassword),
+    };
+    setErrors(validation);
     setError("");
-    setMessage("");
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+    if (hasErrors(validation)) {
+      focusFirstError(event.currentTarget, validation);
       return;
     }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-
+    submitting.current = true;
     setLoading(true);
-
+    let navigating = false;
     try {
-      const { data, error: err } = await signUp({
-        fullName,
-        email,
-        password,
-      });
-
-      if (err) {
-        const isNetworkError =
-          err.code === "NETWORK_ERROR" ||
-          err.name === "NetworkError" ||
-          err.message?.includes("Network error") ||
-          err.status === 0;
-
-        if (isNetworkError) {
-          setError(
-            "Unable to connect to the authentication service. Please check your connection and try again."
-          );
-        } else if (err.status === 400 && err.message.includes("User already registered")) {
-          setError("An account with this email already exists.");
-        } else if (err.status === 400 && err.message.includes("Password")) {
-          setError("Password is too weak. Use at least 6 characters.");
-        } else {
-          setError(err.message || "Unable to create account. Please try again.");
-        }
-        setLoading(false);
-        return;
-      }
-
-      if (data.user) {
-        if (data.session) {
-          router.replace("/dashboard");
-          router.refresh();
-        } else {
-          setMessage(
-            "Account created. Check your email to verify your account."
-          );
-        }
+      const result = await signUp({ fullName, email, password });
+      if (result.error) setError(result.error.message);
+      else if (result.data.session) {
+        window.location.replace("/login");
+        navigating = true;
       } else {
-        setError("Account creation succeeded but no user was returned.");
+        setPassword("");
+        setConfirmPassword("");
+        setSent(true);
       }
-    } catch {
-      setError(
-        "Unable to connect to the authentication service. Please try again."
-      );
+    } catch (error: unknown) {
+      setError(getAuthErrorMessage(error));
     } finally {
-      setLoading(false);
+      if (!navigating) {
+        submitting.current = false;
+        setLoading(false);
+      }
     }
-  };
+  }
+
+  if (sent) return <FormMessage message="Check your inbox for a confirmation link if your email is eligible for a new account. If you already have an account, sign in or reset your password." />;
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <div>
-        <label
-          htmlFor="fullName"
-          className="block text-xs font-medium uppercase tracking-wider text-zinc-400 mb-2"
-        >
-          Full Name
-        </label>
-        <input
-          id="fullName"
-          type="text"
-          required
-          autoComplete="name"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          className="w-full rounded-xl bg-[var(--surface)] border border-white/[0.06] px-4 py-3 text-[var(--foreground)] text-base outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors"
-          placeholder="Your full name"
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="signup-email"
-          className="block text-xs font-medium uppercase tracking-wider text-zinc-400 mb-2"
-        >
-          Email
-        </label>
-        <input
-          id="signup-email"
-          type="email"
-          required
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-xl bg-[var(--surface)] border border-white/[0.06] px-4 py-3 text-[var(--foreground)] text-base outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors"
-          placeholder="you@college.edu"
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="signup-password"
-          className="block text-xs font-medium uppercase tracking-wider text-zinc-400 mb-2"
-        >
-          Password
-        </label>
-        <input
-          id="signup-password"
-          type="password"
-          required
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-xl bg-[var(--surface)] border border-white/[0.06] px-4 py-3 text-[var(--foreground)] text-base outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors"
-          placeholder="At least 6 characters"
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="confirm-password"
-          className="block text-xs font-medium uppercase tracking-wider text-zinc-400 mb-2"
-        >
-          Confirm Password
-        </label>
-        <input
-          id="confirm-password"
-          type="password"
-          required
-          autoComplete="new-password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          className="w-full rounded-xl bg-[var(--surface)] border border-white/[0.06] px-4 py-3 text-[var(--foreground)] text-base outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors"
-          placeholder="Confirm your password"
-        />
-      </div>
-
-      {error && (
-        <p className="text-sm text-red-400">{error}</p>
-      )}
-
-      {message && (
-        <p className="text-sm text-emerald-400">{message}</p>
-      )}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-full bg-[var(--accent)] text-[var(--background)] font-bold py-4 text-base transition-all hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
-      >
-        {loading ? "Creating account..." : "CREATE ACCOUNT"}
-      </button>
+    <form onSubmit={handleSubmit} className={styles.form} noValidate aria-busy={loading}>
+      <Input id="signup-name" name="fullName" label="Full name" autoComplete="name" required maxLength={100} value={fullName} onChange={(event) => setFullName(event.target.value)} error={errors.fullName} disabled={loading} />
+      <Input id="signup-email" name="email" label="Email" type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} error={errors.email} disabled={loading} />
+      <PasswordField id="signup-password" name="password" label="Password" autoComplete="new-password" required minLength={8} maxLength={128} aria-describedby="signup-password-hint" value={password} onChange={(event) => setPassword(event.target.value)} error={errors.password} disabled={loading} />
+      <p id="signup-password-hint" className={styles.hint}>Use 8–128 characters. A unique passphrase works well.</p>
+      <PasswordField id="signup-confirm" name="confirmPassword" label="Confirm password" autoComplete="new-password" required minLength={8} maxLength={128} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} error={errors.confirmPassword} disabled={loading} />
+      <FormMessage message={error} error />
+      <Button type="submit" loading={loading} className={styles.submit}>{loading ? "Creating account…" : "Create account"}</Button>
     </form>
   );
 }

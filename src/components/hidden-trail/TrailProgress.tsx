@@ -21,11 +21,11 @@ export function TrailProgress({
         <div className="relative">
 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isCompleted ? "bg-[var(--accent)]" : isCurrent ? "bg-[var(--accent)]/20 animate-pulse" : "bg-[var(--surface)]/20"} border border-white/[0.06] ${isCurrent ? "border-[var(--accent)]/30" : ""}`}>
             {isCompleted ? (
-              <Image className="h-4 w-4" />
+              <Image className="h-4 w-4" aria-hidden="true" />
             ) : isCurrent ? (
               <MapPin className="h-4 w-4 text-[var(--accent)]" />
             ) : (
-              <div className="h-2 w-2 bg-[var(--mixed)]" />
+              <div className="h-2 w-2 bg-[var(--muted)]" />
             )}
           </div>
 {i < totalLevels && (

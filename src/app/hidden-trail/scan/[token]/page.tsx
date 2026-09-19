@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import {
   requireUser,
@@ -10,19 +10,22 @@ import {
 } from "@/lib/hidden-trail/game";
 import { ScanResult } from "@/components/hidden-trail/ScanResult";
 import { AnswerChallenge } from "@/components/hidden-trail/AnswerChallenge";
+import { PhotoCapture } from "@/components/hidden-trail/PhotoCapture";
 
 export default function ScanTokenPage({
   params,
 }: {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }) {
   const router = useRouter();
+  const { token } = use(params);
 
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
   const [scanResult, setScanResult] = useState<ValidationResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAnswerChallenge, setShowAnswerChallenge] = useState(false);
+  const [completedLevelId, setCompletedLevelId] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -30,7 +33,7 @@ export default function ScanTokenPage({
       try {
         setLoading(true);
         setError(null);
-        
+
         const currentUser = await requireUser();
         if (!currentUser) {
           if (mounted) {
@@ -38,13 +41,13 @@ export default function ScanTokenPage({
           }
           return;
         }
-        
+
         if (!mounted) return;
         setUser({ id: currentUser.id, email: currentUser.email ?? "" });
 
         // Initial scan verification
         setLoading(true);
-        const validation = await validateQrToken(params.token, currentUser.id);
+        const validation = await validateQrToken(token, currentUser.id);
 
         if (!mounted) return;
         setScanResult(validation);
@@ -56,7 +59,7 @@ export default function ScanTokenPage({
           validation.is_valid &&
           validation.is_expected_level &&
           !validation.is_duplicate &&
-          validation.answer_riddle_hash
+          validation.answer_riddle
         ) {
           setShowAnswerChallenge(true);
         }
@@ -72,33 +75,58 @@ export default function ScanTokenPage({
     return () => {
       mounted = false;
     };
-  }, [params.token, router]);
+  }, [token]);
 
   const handleAnswerSubmit = async (answer: string) => {
     if (!user) return;
 
     setLoading(true);
-    setError(null);
     try {
-      const result = await processQrAnswer(params.token, user.id, answer);
+      const result = await processQrAnswer(token, user.id, answer);
       if (result) {
         setScanResult(result);
         setShowAnswerChallenge(false);
-        
-        // If completed, redirect to completion page or show completion state
-        if (result.is_completed) {
-          // Small delay before redirecting
-          setTimeout(() => {
-            router.push("/hidden-trail");
-          }, 2000);
-        }
+        setCompletedLevelId(result.level_id || null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to process answer");
+      // Wrong/other answer errors are surfaced inline by AnswerChallenge.
+      throw err instanceof Error ? err : new Error("Failed to process answer");
     } finally {
       setLoading(false);
     }
   };
+
+  const finish = () => {
+    if (scanResult?.is_completed) {
+      router.push("/hidden-trail/result");
+    } else {
+      router.push("/hidden-trail");
+    }
+  };
+
+  // Success + optional photo moment after a cleared marker.
+  if (scanResult && scanResult.is_valid && !showAnswerChallenge && completedLevelId) {
+    return (
+      <div className="min-h-screen bg-[var(--background)]">
+        <div className="max-container mx-auto py-10 px-4">
+          <div className="text-center mb-8">
+            <p className="text-2xl font-black text-[var(--foreground)] uppercase tracking-tight mb-2">
+              MARKER CLEARED ✓
+            </p>
+            {!scanResult.is_completed && (
+              <p className="text-[var(--muted)]">Next clue unlocked. Continue when ready.</p>
+            )}
+          </div>
+          <PhotoCapture
+            levelId={completedLevelId}
+            captureStage="after_completion"
+            onSkip={finish}
+            onSaved={finish}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -142,6 +170,7 @@ export default function ScanTokenPage({
           showAnswerChallenge={true}
         />
         <AnswerChallenge 
+          answerRiddle={scanResult.answer_riddle}
           onAnswerSubmit={handleAnswerSubmit}
         />
       </div>

@@ -51,20 +51,21 @@ export function GameSettings() {
         
         if (!mountedRef.current) return;
         
-        setGameConfig(data.config);
+        const config = data.config || {};
+        setGameConfig(config);
         setFormData({
-          name: data.config.name || "",
-          description: data.config.description || "",
-          status: data.config.status || "draft",
-          start_at: data.config.start_at ? new Date(data.config.start_at).toISOString().split("T")[0] : "",
-          end_at: data.config.end_at ? new Date(data.config.end_at).toISOString().split("T")[0] : "",
-          score_start_level: data.config.score_start_level || 2,
-          starting_score: data.config.starting_score || 100,
-          score_floor: data.config.score_floor || 30,
-          final_secret_enabled: data.config.final_secret_enabled || false,
-          final_message: data.config.final_message || "",
-          leaderboard_public: data.config.leaderboard_public || true,
-          leaderboard_name_mode: data.config.leaderboard_name_mode || "FIRST_NAME"
+          name: config.name || "",
+          description: config.description || "",
+          status: config.status || "draft",
+          start_at: config.start_at ? new Date(config.start_at).toISOString().split("T")[0] : "",
+          end_at: config.end_at ? new Date(config.end_at).toISOString().split("T")[0] : "",
+          score_start_level: config.score_start_level || 2,
+          starting_score: config.starting_score || 100,
+          score_floor: config.score_floor || 30,
+          final_secret_enabled: config.final_secret_enabled || false,
+          final_message: config.final_message || "",
+          leaderboard_public: config.leaderboard_public || true,
+          leaderboard_name_mode: config.leaderboard_name_mode || "FIRST_NAME"
         });
         setLoading(false);
       } catch (err) {
@@ -88,6 +89,26 @@ export function GameSettings() {
       ...prev,
       [name]: type === "checkbox" ? checked : value
     }));
+  };
+
+  const handleCreate = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/admin/hidden-trail/settings/create", { method: "POST" });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to create configuration");
+      }
+      const data = await response.json();
+      if (!mountedRef.current) return;
+      setGameConfig(data.config);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create configuration");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -143,64 +164,56 @@ export function GameSettings() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--background)]">
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-[var(--accent)] text-lg font-bold animate-pulse">
-            Loading Settings...
-          </div>
-        </div>
+      <div className="chapter-admin-card">
+        <p>Loading Settings...</p>
       </div>
     );
   }
 
-  if (error || !gameConfig) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-[var(--background)]">
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="bg-[var(--surface)] border border-white/[0.06] rounded-2xl p-12 text-center">
-            <h2 className="text-2xl font-black text-[var(--foreground)] uppercase tracking-tight mb-3">
-              Settings Not Available
-            </h2>
-            <p className="text-zinc-500 mb-6">
-              {error || "We couldn't load the game settings right now."}
-            </p>
-            <div className="mt-6">
-              <Link
-                href="/admin/hidden-trail"
-                className="rounded-full px-6 py-3 bg-[var(--accent)] text-[var(--background)] font-bold text-sm hover:bg-opacity-90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-              >
-                RETURN TO OVERVIEW
-              </Link>
-            </div>
-          </div>
-        </div>
+      <div className="chapter-admin-empty">
+        <h2 className="chapter-admin-empty-title">Settings Not Available</h2>
+        <p className="chapter-admin-empty-text">{error || "We couldn't load the game settings right now."}</p>
+        <Link href="/admin/hidden-trail" className="chapter-admin-btn">RETURN TO OVERVIEW</Link>
+      </div>
+    );
+  }
+
+  if (!gameConfig) {
+    return (
+      <div className="chapter-admin-empty">
+        <h2 className="chapter-admin-empty-title">NO HIDDEN TRAIL CONFIGURATION</h2>
+        <p className="chapter-admin-empty-text">A Hidden Trail game has not been configured yet.</p>
+        <button onClick={handleCreate} className="chapter-admin-btn" style={{ marginRight: '0.5rem' }}>CREATE HIDDEN TRAIL CONFIGURATION</button>
+        <Link href="/admin/hidden-trail" className="chapter-admin-btn">RETURN TO OVERVIEW</Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      <form onSubmit={handleSubmit} className="max-container max-w-4xl mx-auto py-8">
-        <h1 className="text-3xl font-black text-[var(--foreground)] uppercase tracking-tight mb-6">
+    <div className="chapter-admin-content">
+      <form onSubmit={handleSubmit} className="chapter-admin-form">
+        <h1 className="chapter-admin-section-title">
           GAME SETTINGS
         </h1>
 
         <div>
           {success && (
-            <div className="bg-[var(--accent)]/20 border border-[var(--accent)]/30 rounded-xl p-4 mb-6">
-              <p className="text-sm font-medium text-[var(--accent)]">{success}</p>
+            <div className="chapter-admin-alert chapter-admin-alert-success">
+              <p>{success}</p>
             </div>
           )}
 
           {error && (
-            <div className="bg-[var(--surface)]/30 border border-[var(--accent)]/20 rounded-xl p-4 mb-6">
-              <p className="text-sm text-[var(--accent)]">{error}</p>
+            <div className="chapter-admin-alert chapter-admin-alert-error">
+              <p>{error}</p>
             </div>
           )}
 
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+          <div>
+            <div className="chapter-admin-form-group">
+              <label className="chapter-admin-label">
                 Game Name
               </label>
               <input
@@ -208,34 +221,33 @@ export function GameSettings() {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="block w-full rounded-xl border border-white/[0.06] bg-[var(--surface)]/20 px-4 py-3 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)]/30"
+                className="chapter-admin-input"
                 required
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+            <div className="chapter-admin-form-group">
+              <label className="chapter-admin-label">
                 Description
               </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                className="block w-full rounded-xl border border-white/[0.06] bg-[var(--surface)]/20 px-4 py-3 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)]/30"
+                className="chapter-admin-input"
                 rows={4}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+            <div className="chapter-admin-form-grid">
+              <div className="chapter-admin-form-group">
+                <label className="chapter-admin-label">
                   Status
                 </label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="block w-full rounded-xl border border-white/[0.06] bg-[var(--surface)]/20 px-4 py-3 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)]/30"
+                  className="chapter-admin-input"
                 >
                   <option value="draft">Draft</option>
                   <option value="active">Active</option>
@@ -244,8 +256,8 @@ export function GameSettings() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+              <div className="chapter-admin-form-group">
+                <label className="chapter-admin-label">
                   Start Date
                 </label>
                 <input
@@ -253,12 +265,12 @@ export function GameSettings() {
                   name="start_at"
                   value={formData.start_at}
                   onChange={handleChange}
-                  className="block w-full rounded-xl border border-white/[0.06] bg-[var(--surface)]/20 px-4 py-3 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)]/30"
+                  className="chapter-admin-input"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+              <div className="chapter-admin-form-group">
+                <label className="chapter-admin-label">
                   End Date
                 </label>
                 <input
@@ -266,12 +278,12 @@ export function GameSettings() {
                   name="end_at"
                   value={formData.end_at}
                   onChange={handleChange}
-                  className="block w-full rounded-xl border border-white/[0.06] bg-[var(--surface)]/20 px-4 py-3 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)]/30"
+                  className="chapter-admin-input"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+              <div className="chapter-admin-form-group">
+                <label className="chapter-admin-label">
                   Score Start Level
                 </label>
                 <input
@@ -279,14 +291,14 @@ export function GameSettings() {
                   name="score_start_level"
                   value={formData.score_start_level}
                   onChange={handleChange}
-                  className="block w-full rounded-xl border border-white/[0.06] bg-[var(--surface)]/20 px-4 py-3 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)]/30"
+                  className="chapter-admin-input"
                   min="1"
                   max="10"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+              <div className="chapter-admin-form-group">
+                <label className="chapter-admin-label">
                   Starting Score
                 </label>
                 <input
@@ -294,13 +306,13 @@ export function GameSettings() {
                   name="starting_score"
                   value={formData.starting_score}
                   onChange={handleChange}
-                  className="block w-full rounded-xl border border-white/[0.06] bg-[var(--surface)]/20 px-4 py-3 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)]/30"
+                  className="chapter-admin-input"
                   min="1"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+              <div className="chapter-admin-form-group">
+                <label className="chapter-admin-label">
                   Score Floor
                 </label>
                 <input
@@ -308,41 +320,41 @@ export function GameSettings() {
                   name="score_floor"
                   value={formData.score_floor}
                   onChange={handleChange}
-                  className="block w-full rounded-xl border border-white/[0.06] bg-[var(--surface)]/20 px-4 py-3 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)]/30"
+                  className="chapter-admin-input"
                   min="1"
                 />
               </div>
 
-              <div>
+              <div className="chapter-admin-form-group">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     name="final_secret_enabled"
                     checked={formData.final_secret_enabled}
                     onChange={handleChange}
-                    className="h-4 w-4 rounded border-white/[0.06] bg-[var(--surface)]/20 text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-2"
+                    className="chapter-admin-checkbox"
                   />
-                  <span className="text-sm font-medium text-[var(--foreground)]">
+                  <span className="chapter-admin-label">
                     Enable Final Secret
                   </span>
                 </label>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+              <div className="chapter-admin-form-group">
+                <label className="chapter-admin-label">
                   Final Message
                 </label>
                 <textarea
                   name="final_message"
                   value={formData.final_message}
                   onChange={handleChange}
-                  className="block w-full rounded-xl border border-white/[0.06] bg-[var(--surface)]/20 px-4 py-3 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)]/30"
+                  className="chapter-admin-input"
                   rows={3}
                   placeholder="Message shown when trail is completed"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="chapter-admin-form-grid">
                 <div>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -350,23 +362,23 @@ export function GameSettings() {
                       name="leaderboard_public"
                       checked={formData.leaderboard_public}
                       onChange={handleChange}
-                      className="h-4 w-4 rounded border-white/[0.06] bg-[var(--surface)]/20 text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-2"
+                      className="chapter-admin-checkbox"
                     />
-                    <span className="text-sm font-medium text-[var(--foreground)]">
+                    <span className="chapter-admin-label">
                       Public Leaderboard
                     </span>
                   </label>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+                  <label className="chapter-admin-label">
                     Leaderboard Name Mode
                   </label>
                   <select
                     name="leaderboard_name_mode"
                     value={formData.leaderboard_name_mode}
                     onChange={handleChange}
-                    className="block w-full rounded-xl border border-white/[0.06] bg-[var(--surface)]/20 px-4 py-3 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-[var(--accent)]/30"
+                    className="chapter-admin-input"
                   >
                     <option value="FIRST_NAME">First Name Only</option>
                     <option value="FULL_NAME">Full Name</option>
@@ -377,11 +389,11 @@ export function GameSettings() {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-white/[0.06]">
+              <div className="chapter-admin-actions">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-full bg-[var(--accent)] text-[var(--background)] font-bold py-4 text-base transition-all hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                  className="chapter-admin-btn"
                 >
                   {loading ? "Saving..." : "SAVE SETTINGS"}
                 </button>

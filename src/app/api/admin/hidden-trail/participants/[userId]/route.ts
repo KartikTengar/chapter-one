@@ -13,7 +13,7 @@ export async function GET(
 
     const { userId } = await params;
     const { searchParams } = new URL(request.url);
-    const gameId = searchParams.get("gameId") || "00000000-0000-0000-0000-000000000001";
+    const gameId = searchParams.get("gameId");
 
     const result = await getParticipantDetailAdmin(gameId, userId);
 

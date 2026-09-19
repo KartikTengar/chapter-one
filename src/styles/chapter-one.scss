@@ -1,0 +1,64 @@
+@use "mixins" as m;
+@use "base";
+@use "bootstrap-partial";
+@use "admin";
+@use "qr-poster";
+@use "utilities";
+
+.container-c1,
+.max-container {
+  @include m.container;
+}
+
+.section-c1 {
+  @include m.section-spacing;
+  position: relative;
+}
+
+.display,
+.headline-display {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.label {
+  font-size: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.meta {
+  font-size: var(--text-meta);
+  color: var(--muted);
+}
+
+.event-card,
+.dashboard-card {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-subtle);
+  padding: var(--space-5);
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-base) 25%,
+    var(--skeleton-highlight) 50%,
+    var(--skeleton-base) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading calc(var(--dur-normal) * 5) ease-in-out infinite;
+  border-radius: var(--radius-card);
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

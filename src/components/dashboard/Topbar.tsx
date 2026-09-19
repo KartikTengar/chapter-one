@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Bell, User, LogOut } from "lucide-react";
+import { Bell, User } from "lucide-react";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 
 export function MobileNav() {
   const [userName, setUserName] = useState<string>("");
@@ -50,7 +50,6 @@ export function MobileNav() {
 }
 
 export function Topbar() {
-  const router = useRouter();
   const [userName, setUserName] = useState<string>("");
 
   useEffect(() => {
@@ -67,48 +66,10 @@ export function Topbar() {
     });
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-      
-      if (response.ok || response.redirected) {
-        // If the server redirected us, follow the redirect
-        if (response.redirected) {
-          window.location.href = response.url;
-        } else {
-          router.replace("/login");
-          router.refresh();
-        }
-      } else {
-        // Fallback to client-side signOut
-        const supabase = createClient();
-        await supabase.auth.signOut();
-        router.replace("/login");
-        router.refresh();
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
-      // Fallback to client-side signOut
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      router.replace("/login");
-      router.refresh();
-    }
-  };
-
   return (
     <header className="hidden lg:flex items-center justify-between h-16 px-6 border-b border-white/[0.06] bg-[var(--surface)]/50 backdrop-blur-xl sticky top-0 z-30">
       <div className="flex items-center gap-3">
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 rounded-full px-4 py-2 border border-white/[0.12] text-[var(--foreground)] text-sm font-medium hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-        >
-          <LogOut className="h-4 w-4" />
-          <span>Log Out</span>
-        </button>
+        <LogoutButton variant="topbar" />
       </div>
       <div className="flex items-center gap-3">
         <button className="relative rounded-full p-2 text-zinc-400 hover:text-[var(--accent)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">

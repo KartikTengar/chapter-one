@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Trophy, Crown, Medal, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import { requireUser, getLeaderboard, getGameConfig } from "@/lib/hidden-trail/game";
+import { getGameLeaderboard, type GameLeaderboard } from "@/lib/api/leaderboard";
 import { HiddenTrailShell } from "@/components/hidden-trail/HiddenTrailShell";
 
 interface LeaderboardEntry {
@@ -22,8 +22,8 @@ interface LeaderboardEntry {
 
 export default function HiddenTrailLeaderboard() {
   const router = useRouter();
-  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [myRank, setMyRank] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPrivateMessage, setShowPrivateMessage] = useState(false);
@@ -36,39 +36,30 @@ export default function HiddenTrailLeaderboard() {
         setError(null);
         setShowPrivateMessage(false);
 
-        // Get game config first to get gameId
-        const gameConfig = await getGameConfig();
-        if (!gameConfig) {
-          if (mounted) {
-            setShowPrivateMessage(true);
-            setLoading(false);
-          }
+        const data = await getGameLeaderboard("hidden-trail");
+        if (!mounted) return;
+
+        if (!data) {
+          setShowPrivateMessage(true);
+          setLoading(false);
           return;
         }
 
-        // Try to get current user (optional for public leaderboard)
-        let currentUser = null;
-        try {
-          currentUser = await requireUser();
-        } catch {
-          // Not logged in — leaderboard is public
-        }
-        if (mounted && currentUser) {
-          setUser({ id: currentUser.id, email: currentUser.email ?? "" });
-        }
-
-        if (!mounted) return;
-
-        const leaderboardData = await getLeaderboard(gameConfig.id);
-        if (mounted) setLeaderboard(leaderboardData);
-        if (mounted) setLoading(false);
+        setLeaderboard(
+          data.entries.map((e) => ({
+            user_id: `rank-${e.rank}`,
+            total_points: e.score ?? 0,
+            current_level: 0,
+            status: "active",
+            completed_at: null,
+            profiles: { full_name: e.display_name, email: null },
+          }))
+        );
+        if (data.me?.rank != null) setMyRank(`rank-${data.me.rank}`);
+        setLoading(false);
       } catch (err) {
         if (mounted) {
-          if (err instanceof Error && (err.message.includes("private") || err.message.includes("disabled"))) {
-            setShowPrivateMessage(true);
-          } else {
-            setError(err instanceof Error ? err.message : "Failed to load leaderboard");
-          }
+          setError(err instanceof Error ? err.message : "Failed to load leaderboard");
           setLoading(false);
         }
       }
@@ -110,7 +101,7 @@ export default function HiddenTrailLeaderboard() {
     );
   }
 
-  if (error || !user) {
+  if (error) {
     return (
       <HiddenTrailShell>
         <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
@@ -126,7 +117,6 @@ export default function HiddenTrailLeaderboard() {
     );
   }
 
-  const podiumColors = ["text-[#F5D06E]", "text-[#C0C0C0]", "text-[#CD7F32]"];
   const podiumHeights = ["h-40", "h-28", "h-24"];
   const podiumLabels = ["1ST", "2ND", "3RD"];
 
@@ -196,20 +186,17 @@ export default function HiddenTrailLeaderboard() {
             </div>
             <div className="divide-y divide-white/[0.06]">
               {leaderboard.map((entry, index) => {
-                const isTop3 = index < 3;
-                const currentUserRank = leaderboard.findIndex((e) => e.user_id === user?.id) + 1;
-                const isCurrent = entry.user_id === user?.id;
                 return (
                   <div
                     key={entry.user_id}
                     className={`flex items-center justify-between px-4 md:px-6 py-4 transition-colors ${
                       index < 3 ? "bg-gradient-to-r from-[var(--accent)]/10 to-transparent" : "hover:bg-[var(--surface)]/20"
-                    } ${entry.user_id === user?.id ? "border-l-2 border-[var(--accent)]" : ""}`}
+                    } ${entry.user_id === myRank ? "border-l-2 border-[var(--accent)]" : ""}`}
                   >
                     <span className={`text-sm md:text-base font-black w-12 ${index < 3 ? "text-[#F5D06E]" : "text-zinc-400"}`}>
                       #{index + 1}
                     </span>
-                    <span className={`text-sm md:text-base font-medium truncate max-w-[60%] md:max-w-[70%] ${entry.user_id === user?.id ? "text-[var(--accent)]" : "text-[var(--foreground)]"}`}>
+                    <span className={`text-sm md:text-base font-medium truncate max-w-[60%] md:max-w-[70%] ${entry.user_id === myRank ? "text-[var(--accent)]" : "text-[var(--foreground)]"}`}>
                       {entry.profiles?.full_name?.split(" ")[0] || "Anonymous"}
                     </span>
                     <span className={`text-sm md:text-base font-black ${index < 3 ? "text-[var(--accent)]" : "text-[var(--foreground)]"}`}>

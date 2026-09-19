@@ -1,0 +1,120 @@
+@use "sass:map";
+@use "tokens" as t;
+
+$grid-breakpoints: t.$breakpoints;
+$container-max-widths: ();
+$spacer: t.$space-4;
+$spacers: t.$spacing;
+$enable-important-utilities: false;
+$enable-negative-margins: false;
+
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/variables-dark";
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+
+$utilities: (
+  "display": (
+    responsive: true,
+    property: display,
+    class: bs-d,
+    values: none inline inline-block block grid inline-grid flex inline-flex,
+  ),
+  "flex": (
+    responsive: true,
+    property: flex,
+    class: bs-flex,
+    values: (fill: 1 1 auto),
+  ),
+  "flex-direction": (
+    responsive: true,
+    property: flex-direction,
+    class: bs-flex,
+    values: row column row-reverse column-reverse,
+  ),
+  "flex-grow": (
+    responsive: true,
+    property: flex-grow,
+    class: bs-flex-grow,
+    values: (0: 0, 1: 1),
+  ),
+  "flex-shrink": (
+    responsive: true,
+    property: flex-shrink,
+    class: bs-flex-shrink,
+    values: (0: 0, 1: 1),
+  ),
+  "flex-wrap": (
+    responsive: true,
+    property: flex-wrap,
+    class: bs-flex,
+    values: wrap nowrap wrap-reverse,
+  ),
+  "justify-content": (
+    responsive: true,
+    property: justify-content,
+    class: bs-justify-content,
+    values: (start: flex-start, end: flex-end, center: center, between: space-between, around: space-around, evenly: space-evenly),
+  ),
+  "align-items": (
+    responsive: true,
+    property: align-items,
+    class: bs-align-items,
+    values: (start: flex-start, end: flex-end, center: center, baseline: baseline, stretch: stretch),
+  ),
+  "align-content": (
+    responsive: true,
+    property: align-content,
+    class: bs-align-content,
+    values: (start: flex-start, end: flex-end, center: center, between: space-between, around: space-around, stretch: stretch),
+  ),
+  "align-self": (
+    responsive: true,
+    property: align-self,
+    class: bs-align-self,
+    values: (auto: auto, start: flex-start, end: flex-end, center: center, baseline: baseline, stretch: stretch),
+  ),
+  "order": (
+    responsive: true,
+    property: order,
+    class: bs-order,
+    values: (first: -1, 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, last: 6),
+  ),
+);
+
+@each $property in (gap, row-gap, column-gap) {
+  $utilities: map.set($utilities, $property, (
+    responsive: true,
+    property: $property,
+    class: bs-#{$property},
+    values: $spacers,
+  ));
+}
+
+@each $prefix, $property in (m: margin, p: padding) {
+  $values: $spacers;
+
+  @if $prefix == m {
+    $values: map.merge($values, (auto: auto));
+  }
+
+  @each $suffix, $properties in (
+    "": $property,
+    x: (#{$property}-right #{$property}-left),
+    y: (#{$property}-top #{$property}-bottom),
+    t: #{$property}-top,
+    b: #{$property}-bottom,
+    s: #{$property}-inline-start,
+    e: #{$property}-inline-end
+  ) {
+    $utilities: map.set($utilities, "#{$prefix}#{$suffix}", (
+      responsive: true,
+      property: $properties,
+      class: bs-#{$prefix}#{$suffix},
+      values: $values,
+    ));
+  }
+}
+
+@import "bootstrap/scss/utilities/api";

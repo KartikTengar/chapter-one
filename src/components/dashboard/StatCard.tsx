@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 interface StatCardProps {
   label: string;
   value: number | string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 export function StatCard({ label, value, icon: Icon }: StatCardProps) {

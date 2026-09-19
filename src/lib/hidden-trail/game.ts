@@ -10,7 +10,7 @@ export interface GameConfig {
   id: string;
   name: string;
   description: string | null;
-  status: "draft" | "active" | "paused" | "ended";
+  status: "draft" | "ready" | "running" | "paused" | "ended" | "archived";
   start_at: string | null;
   end_at: string | null;
   score_start_level: number;
@@ -23,6 +23,7 @@ export interface GameConfig {
   leaderboard_name_mode: "FIRST_NAME" | "FULL_NAME" | "ANONYMOUS";
   created_at: string;
   updated_at: string;
+  is_current?: boolean;
 }
 
 export interface GameLevel {
@@ -117,7 +118,7 @@ export interface ScanResult {
   current_level: number;
   total_points: number;
   location_riddle: string;
-  answer_riddle_hash: string;
+  answer_riddle: string;
   case_sensitive: boolean;
   error_message: string | null;
 }
@@ -134,7 +135,7 @@ export interface ValidationResult {
   current_level: number;
   total_points: number;
   location_riddle: string;
-  answer_riddle_hash: string;
+  answer_riddle: string;
   case_sensitive: boolean;
   error_message: string | null;
 }
@@ -150,10 +151,8 @@ export async function getGameConfig(): Promise<GameConfig | null> {
   const { data: game, error } = await supabase
     .from("qr_games")
     .select("*")
-    .eq("status", "active")
-    .order("start_at", { ascending: false })
-    .limit(1)
-    .single();
+    .eq("is_current", true)
+    .maybeSingle();
   if (error || !game) return null;
   return game as GameConfig;
 }
@@ -215,10 +214,23 @@ export async function getParticipantStatus(gameId: string, userId: string): Prom
     .select("*")
     .eq("game_id", gameId)
     .eq("user_id", userId)
-    .single();
+    .maybeSingle();
 
   if (error) {
-    // Return default not started status if no record found
+    return {
+      id: "",
+      game_id: gameId,
+      user_id: userId,
+      current_level: 0,
+      total_points: 0,
+      status: "not_started",
+      started_at: null,
+      last_scan_at: null,
+      completed_at: null
+    };
+  }
+
+  if (!data) {
     return {
       id: "",
       game_id: gameId,
@@ -251,45 +263,59 @@ export async function getParticipantCompletions(gameId: string, userId: string) 
   return data;
 }
 
-export async function startQrParticipant(gameId: string, userId: string) {
-  const supabase = getSupabase();
-  const { data, error } = await supabase.rpc("start_qr_participant", {
-    p_game_id: gameId,
-    p_user_id: userId,
-  });
-  if (error) throw new Error(error.message);
-  return data;
-}
-
 export async function validateQrToken(token: string, userId: string): Promise<ScanResult | null> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase.rpc("validate_qr_token", {
-    p_token: token,
-    p_user_id: userId,
-  });
-  if (error) throw new Error(error.message);
-  if (!data || data.length === 0) return null;
-  return data[0] as ScanResult;
+  const { trailScan } = await import("@/lib/api/trail");
+  try {
+    const result = await trailScan(token);
+    if (!result) return null;
+    return {
+      game_id: result.game_id ?? "",
+      level_id: result.level_id ?? "",
+      level_number: result.level_number ?? 0,
+      is_valid: result.is_valid,
+      is_expected_level: result.is_expected_level,
+      is_duplicate: result.is_duplicate,
+      is_completed: false,
+      game_status: result.game_status,
+      current_level: result.current_level,
+      total_points: result.total_points,
+      location_riddle: result.location_riddle ?? "",
+      answer_riddle: result.answer_riddle ?? "",
+      case_sensitive: result.case_sensitive,
+      error_message: result.error_message,
+    } as ScanResult;
+  } catch (err) {
+    const e = err as { code?: string; message?: string };
+    if (e?.code) {
+      throw new Error(e.message ?? "Failed to verify marker");
+    }
+    throw new Error("Failed to verify marker");
+  }
 }
 
 export async function processQrAnswer(token: string, userId: string, answer: string): Promise<ScanResult | null> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase.rpc("process_qr_answer", {
-    p_token: token,
-    p_user_id: userId,
-    p_answer: answer,
-  });
-  if (error) throw new Error(error.message);
-  if (!data || data.length === 0) return null;
-  return data[0] as ScanResult;
-}
-
-export async function hashAnswer(answer: string, caseSensitive: boolean): Promise<string> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase.rpc("hash_answer", {
-    p_answer: answer,
-    p_case_sensitive: caseSensitive,
-  });
-  if (error) throw new Error(error.message);
-  return data as string;
+  const { trailAnswer } = await import("@/lib/api/trail");
+  try {
+    const result = await trailAnswer(token, answer);
+    if (!result) return null;
+    return {
+      game_id: result.game_id,
+      level_id: result.level_id,
+      level_number: result.level_number,
+      is_valid: true,
+      is_expected_level: true,
+      is_duplicate: false,
+      is_completed: result.is_completed,
+      game_status: result.status,
+      current_level: result.current_level,
+      total_points: result.total_points,
+      location_riddle: result.location_riddle ?? "",
+      answer_riddle: result.answer_riddle ?? "",
+      case_sensitive: false,
+      error_message: null,
+    } as ScanResult;
+  } catch (err) {
+    const e = err as { code?: string; message?: string };
+    throw new Error(e?.message ?? "Failed to process answer");
+  }
 }

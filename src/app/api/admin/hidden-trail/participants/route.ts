@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const gameId = searchParams.get("gameId") || "00000000-0000-0000-0000-000000000001";
+    const gameId = searchParams.get("gameId");
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "25", 10);
     const search = searchParams.get("search") || "";

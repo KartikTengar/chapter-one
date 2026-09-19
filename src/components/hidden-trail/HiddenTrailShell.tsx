@@ -1,7 +1,21 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { requireUser, getGameConfig, getParticipantStatus } from "@/lib/hidden-trail/game";
+import { LogoutButton } from "@/components/auth/LogoutButton";
+import {
+  MapPin,
+  Flag,
+  BarChart3,
+  RotateCw,
+  Trophy,
+  Images,
+  Layers3,
+  Menu,
+  X,
+} from "lucide-react";
 
 interface GameConfig {
   id: string;
@@ -33,6 +47,16 @@ interface ParticipantStatus {
   completed_at: string | null;
 }
 
+const navItems = [
+  { href: "/hidden-trail", label: "Hidden Trail", icon: MapPin },
+  { href: "/hidden-trail/result", label: "Result", icon: Flag },
+  { href: "/hidden-trail/stats", label: "Stats", icon: BarChart3 },
+  { href: "/hidden-trail/replay", label: "Replay", icon: RotateCw },
+  { href: "/hidden-trail/achievements", label: "Achievements", icon: Trophy },
+  { href: "/hidden-trail/album", label: "Album", icon: Images },
+  { href: "/hidden-trail/leaderboard", label: "Leaderboard", icon: Layers3 },
+];
+
 export function HiddenTrailShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -41,6 +65,7 @@ export function HiddenTrailShell({ children }: { children: React.ReactNode }) {
   const [participant, setParticipant] = useState<ParticipantStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -48,35 +73,22 @@ export function HiddenTrailShell({ children }: { children: React.ReactNode }) {
       try {
         setLoading(true);
         setError(null);
-        
         const currentUser = await requireUser();
         if (!currentUser) {
-          if (mounted) {
-            router.replace("/login");
-          }
+          if (mounted) router.replace("/login");
           return;
         }
-        
         if (!mounted) return;
         setUser({ id: currentUser.id, email: currentUser.email ?? "" });
-        
-        // Get game config
         const config = await getGameConfig();
         if (!config) {
-          if (mounted) {
-            setError("No active game found");
-            setLoading(false);
-          }
+          if (mounted) { setError("No active game found"); setLoading(false); }
           return;
         }
-        
         if (!mounted) return;
         setGameConfig(config);
-        
-        // Get participant status
         const participantData = await getParticipantStatus(config.id, currentUser.id);
         if (mounted) setParticipant(participantData);
-        
         if (mounted) setLoading(false);
       } catch (err) {
         if (mounted) {
@@ -85,12 +97,13 @@ export function HiddenTrailShell({ children }: { children: React.ReactNode }) {
         }
       }
     };
-
     init();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [router]);
+
+  const isActive = (href: string) => pathname === href;
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   if (loading) {
     return (
@@ -125,53 +138,90 @@ export function HiddenTrailShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[var(--background)]">
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:fixed lg:left-0 lg:top-0 lg:bottom-0 lg:w-64 lg:z-50 lg:flex lg:flex-col">
-        <div className="flex flex-col h-full bg-[var(--surface)] border-r border-white/[0.06]">
-          <div className="p-6 flex items-center gap-3">
-            <span className="text-xl font-black tracking-wider text-[var(--foreground)] uppercase">
-              CHAPTER ONE
-            </span>
-          </div>
-          <nav className="flex-1 flex flex-col gap-1 px-3 py-2 overflow-y-auto">
-            <div key="Overview">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1 mt-3">
-                Overview
-              </p>
+  const sidebarNav = (
+    <aside className="hidden lg:fixed lg:left-0 lg:top-0 lg:bottom-0 lg:w-60 lg:z-50 lg:flex lg:flex-col">
+      <div className="flex flex-col h-full bg-[var(--surface)] border-r border-white/[0.06]">
+        <div className="p-5 flex items-center gap-3 border-b border-white/[0.06]">
+          <span className="text-lg font-black tracking-wider text-[var(--foreground)] uppercase">
+            CHAPTER ONE
+          </span>
+        </div>
+        <nav className="flex-1 flex flex-col gap-0.5 px-2 py-2 overflow-y-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+            return (
               <Link
-                href="/hidden-trail"
+                key={item.href}
+                href={item.href}
+                onClick={closeMobileMenu}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  pathname === "/hidden-trail"
+                  active
                     ? "text-[var(--accent)] bg-[var(--accent-dim)]"
                     : "text-zinc-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]"
                 }`}
               >
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4">🗺️</span>
-                  Hidden Trail
-                </span>
+                <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                {item.label}
               </Link>
-            </div>
-          </nav>
-          <div className="p-3 border-t border-white/[0.06]">
-            <Link
-              href="/login"
-              onClick={() => {
-                router.push("/login");
-              }}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-400/[0.05] transition-colors"
-            >
-              <span className="h-4 w-4">🚪</span>
-              Log Out
-            </Link>
-          </div>
+            );
+          })}
+        </nav>
+        <div className="p-3 border-t border-white/[0.06]">
+          <LogoutButton />
         </div>
-      </aside>
+      </div>
+    </aside>
+  );
+
+  return (
+    <div className="min-h-screen bg-[var(--background)]">
+      {sidebarNav}
+
+      {/* Mobile topbar */}
+      <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-[var(--surface)] border-b border-white/[0.06]">
+        <Link href="/hidden-trail" className="text-lg font-black tracking-wider text-[var(--foreground)] uppercase">
+          CHAPTER ONE
+        </Link>
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="flex items-center justify-center w-9 h-9 rounded-xl bg-[var(--background)] border border-white/[0.06] text-[var(--foreground)] hover:bg-white/[0.03] transition-colors"
+          aria-label="Toggle navigation menu"
+          aria-expanded={mobileMenuOpen}
+        >
+          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      </div>
+
+      {/* Mobile dropdown */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-[var(--surface)] border-b border-white/[0.06]">
+          <nav className="flex flex-col py-2 px-3 gap-0.5">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={closeMobileMenu}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    active
+                      ? "text-[var(--accent)] bg-[var(--accent-dim)]"
+                      : "text-zinc-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]"
+                  }`}
+                >
+                  <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      )}
 
       {/* Main content */}
-      <div className={`lg:ml-64 min-h-screen`}>
+      <div className="lg:ml-60 min-h-screen">
         {children}
       </div>
     </div>

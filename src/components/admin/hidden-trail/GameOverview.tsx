@@ -20,9 +20,13 @@ interface OverviewData {
   };
 }
 
+interface ReadinessResult {
+  passed: boolean;
+  checks: Array<{ name: string; passed: boolean; detail: string }>;
+  level_count: number;
+}
+
 export function GameOverview() {
-  const [gameConfig, setGameConfig] = useState<GameConfig | null>(null);
-  const [levels, setLevels] = useState<GameLevel[]>([]);
   const [recentScans, setRecentScans] = useState<ScanLogWithRelations[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [stats, setStats] = useState({
@@ -36,6 +40,9 @@ export function GameOverview() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasGame, setHasGame] = useState<boolean | null>(null);
+  const [readiness, setReadiness] = useState<ReadinessResult | null>(null);
+  const [checkingReadiness, setCheckingReadiness] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -61,11 +68,10 @@ export function GameOverview() {
         
         if (!mounted) return;
         
-        setGameConfig(data.gameConfig);
-        setLevels(data.levels);
         setRecentScans(data.recentScans);
         setLeaderboard(data.leaderboard);
         setStats(data.stats);
+        setHasGame(data.gameConfig !== null);
         setLoading(false);
       } catch (err) {
         if (mounted) {
@@ -81,16 +87,41 @@ export function GameOverview() {
     };
   }, [router]);
 
+  const runReadinessCheck = async () => {
+    if (checkingReadiness) return;
+    setCheckingReadiness(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/admin/hidden-trail/readiness", {
+        method: "POST",
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to run readiness check");
+      }
+      const data = await response.json();
+      setReadiness(data);
+      // Refresh overview to get updated readiness timestamp
+      const overviewRes = await fetch("/api/admin/hidden-trail/overview");
+      const overviewData = await overviewRes.json();
+      setRecentScans(overviewData.recentScans);
+      setLeaderboard(overviewData.leaderboard);
+      setStats(overviewData.stats);
+      setHasGame(overviewData.gameConfig !== null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to run readiness check");
+    } finally {
+      setCheckingReadiness(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="animate-pulse space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-[var(--surface)] border border-white/[0.06] rounded-2xl p-6 h-32" />
-            ))}
-          </div>
-          <div className="h-64 bg-[var(--surface)] border border-white/[0.06] rounded-2xl" />
+      <div className="chapter-admin-content">
+        <div className="chapter-admin-stat-grid">
+          {Array.from({length:4}).map((_,i)=>(
+            <div key={i} className="chapter-admin-card" />
+          ))}
         </div>
       </div>
     );
@@ -98,227 +129,135 @@ export function GameOverview() {
 
   if (error) {
     return (
-      <div className="bg-[var(--surface)] border border-white/[0.06] rounded-2xl p-12 text-center">
-        <h2 className="text-2xl font-black text-[var(--foreground)] uppercase tracking-tight mb-3">
-          Failed to Load Overview
-        </h2>
-        <p className="text-zinc-500 mb-6">
-          {error || "We couldn't load the game overview right now."}
-        </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="rounded-full px-6 py-3 bg-[var(--accent)] text-[var(--background)] font-bold text-sm hover:bg-opacity-90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-        >
-          RETRY
-        </button>
+      <div className="chapter-admin-empty">
+        <h2 className="chapter-admin-empty-title">Failed to Load Overview</h2>
+        <p className="chapter-admin-empty-text">{error || "We couldn't load the game overview right now."}</p>
+        <button onClick={() => window.location.reload()} className="chapter-admin-btn">RETRY</button>
       </div>
     );
   }
 
-  // ... rest of the component remains the same
-  // (keeping the JSX rendering part)
+  if (hasGame === false) {
+    return (
+      <div className="chapter-admin-empty">
+        <h2 className="chapter-admin-empty-title">NO HIDDEN TRAIL GAME CONFIGURED</h2>
+        <p className="chapter-admin-empty-text">Create or configure a Hidden Trail game to begin.</p>
+        <a href="/admin/hidden-trail/settings" className="chapter-admin-btn">CONFIGURE GAME</a>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          label="TOTAL PLAYERS"
-          value={stats.totalParticipants}
-          icon="👥"
-        />
-        <StatCard
-          label="ACTIVE"
-          value={stats.activePlayers}
-          icon="🟢"
-          accent
-        />
-        <StatCard
-          label="COMPLETED"
-          value={stats.completedPlayers}
-          icon="🏁"
-          accent
-        />
-        <StatCard
-          label="AVG SCORE"
-          value={stats.totalParticipants > 0 
-            ? Math.round(leaderboard.reduce((sum, l) => sum + l.total_points, 0) / stats.totalParticipants)
-            : 0}
-          icon="📊"
-        />
+    <div>
+      <div className="chapter-admin-stat-grid">
+        <StatCard label="TOTAL PLAYERS" value={stats.totalParticipants} icon="👥" />
+        <StatCard label="ACTIVE" value={stats.activePlayers} icon="🟢" accent />
+        <StatCard label="COMPLETED" value={stats.completedPlayers} icon="🏁" accent />
+        <StatCard label="AVG SCORE" value={stats.totalParticipants > 0 
+          ? Math.round(leaderboard.reduce((sum, l) => sum + l.total_points, 0) / stats.totalParticipants)
+          : 0} icon="📊" />
       </div>
 
-      {/* Level Stats Table */}
-      <div className="bg-[var(--surface)] border border-white/[0.06] rounded-2xl p-6">
-        <h2 className="text-xl font-black text-[var(--foreground)] uppercase tracking-tight mb-4">
-          LEVEL PERFORMANCE
-        </h2>
-        <div className="overflow-hidden">
-          <table className="min-w-full divide-y divide-white/[0.06]">
-            <thead>
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-black text-[var(--accent)] uppercase tracking-wider">
-                  LEVEL
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-black text-[var(--accent)] uppercase tracking-wider">
-                  TITLE
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-black text-[var(--accent)] uppercase tracking-wider">
-                  COMPLETIONS
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-black text-[var(--accent)] uppercase tracking-wider">
-                  CURRENT VALUE
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-black text-[var(--accent)] uppercase tracking-wider">
-                  STATUS
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-[var(--background)] divide-y divide-white/[0.06]">
-              {stats.levelStats.map((level: { level_number: number; title: string; successfulCompletions: number; currentValue: number; is_active: boolean }, index: number) => (
-                <tr key={index} className="hover:bg-[var(--surface)]/20 transition-colors">
-                  <td className="px-6 py-4 text-sm font-medium text-[var(--foreground)]">
-                    {String(level.level_number).padStart(2, '0')}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-[var(--foreground)]">
-                    {level.title}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-[var(--accent)] font-medium">
-                    {level.successfulCompletions}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-[var(--accent)] font-medium">
-                    {level.currentValue}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      level.is_active ? "bg-[var(--accent)]/20 text-[var(--accent)]" : "bg-[var(--surface)]/30 text-[var(--muted)]"
-                    }`}>
-                      {level.is_active ? "ACTIVE" : "INACTIVE"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="chapter-admin-card" style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+        <h2 className="chapter-admin-section-title">GAME READINESS</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+          <button 
+            onClick={runReadinessCheck} 
+            disabled={checkingReadiness}
+            className="chapter-admin-btn"
+          >
+            {checkingReadiness ? "Checking..." : "Run Readiness Check"}
+          </button>
+          {readiness && (
+            <span className={readiness.passed ? "chapter-admin-badge chapter-admin-badge-accent" : "chapter-admin-badge"}>
+              {readiness.passed ? "✓ READY" : "✗ NOT READY"}
+            </span>
+          )}
+          {readiness && (
+            <span style={{ fontSize: "0.875rem", color: "#666" }}>
+              {readiness.level_count}/10 levels configured
+            </span>
+          )}
         </div>
+        {readiness && (
+          <details style={{ marginTop: "1rem" }}>
+            <summary>View Checks</summary>
+            <pre style={{ marginTop: "0.5rem", fontSize: "0.75rem", maxHeight: "300px", overflow: "auto" }}>
+              {JSON.stringify(readiness.checks, null, 2)}
+            </pre>
+          </details>
+        )}
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-[var(--surface)] border border-white/[0.06] rounded-2xl p-6">
-        <h2 className="text-xl font-black text-[var(--foreground)] uppercase tracking-tight mb-4">
-          RECENT ACTIVITY
-        </h2>
-        <div className="space-y-4">
-          {recentScans.map((scan: ScanLogWithRelations, index: number) => (
-            <div key={index} className="border-b pb-4 last:border-0 last:pb-0 flex items-center gap-4">
-              <div className={`flex items-center gap-2 p-2 rounded-full ${scan.result === "answer_correct"
-                ? "bg-[var(--accent)]/20"
-                : "bg-[var(--surface)]/30"
-              }`}>
-                {scan.result === "answer_correct" && (
-                  <span className="text-[var(--accent)] font-medium">#{scan.scanner_position}</span>
-                )}
-                {scan.result !== "answer_correct" && (
-                  <span className="h-4 w-4">
-                    {scan.result === "wrong_answer" ? "❌" : scan.result === "invalid_token" ? "🚫" : "⚠️"}
+      <div className="chapter-admin-table-wrap">
+        <h2 className="chapter-admin-section-title">LEVEL PERFORMANCE</h2>
+        <table className="chapter-admin-table">
+          <thead>
+            <tr>
+              <th>LEVEL</th>
+              <th>TITLE</th>
+              <th>COMPLETIONS</th>
+              <th>CURRENT VALUE</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stats.levelStats.map((level, index) => (
+              <tr key={index}>
+                <td>{String(level.level_number).padStart(2, '0')}</td>
+                <td>{level.title}</td>
+                <td>{level.successfulCompletions}</td>
+                <td>{level.currentValue}</td>
+                <td>
+                  <span className={level.is_active ? "chapter-admin-badge chapter-admin-badge-accent" : "chapter-admin-badge"}>
+                    {level.is_active ? "ACTIVE" : "INACTIVE"}
                   </span>
-                )}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-[var(--foreground)]">
-                  {scan.profiles?.full_name?.split(" ")[0] || "Anonymous"}
-                </p>
-                <p className="text-xs text-zinc-400">
-                  Level {String(scan.qr_levels?.level_number || 0).padStart(2, '0')}
-                </p>
-              </div>
-              <div className="text-right text-sm">
-                {scan.result === "answer_correct" && (
-                  <>
-                    <span className="text-[var(--accent)] font-medium">+{scan.points_awarded}</span>
-                    <span className="ml-2 text-xs text-zinc-400">pts</span>
-                  </>
-                )}
-                {scan.result === "wrong_answer" && (
-                  <span className="text-[var(--accent)]">WRONG ANSWER</span>
-                )}
-                {scan.result === "invalid_token" && (
-                  <span className="text-[var(--accent)]">INVALID TOKEN</span>
-                )}
-                {scan.result === "wrong_sequence" && (
-                  <span className="text-[var(--accent)]">WRONG TRAIL</span>
-                )}
-                {scan.result === "duplicate" && (
-                  <span className="text-[var(--accent)]">ALREADY CLEARED</span>
-                )}
-              </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="chapter-admin-card">
+        <h2 className="chapter-admin-section-title">RECENT ACTIVITY</h2>
+        <div>
+          {recentScans.map((scan, index) => (
+            <div key={index}>
+              <p>{scan.profiles?.full_name?.split(" ")[0] || "Anonymous"}</p>
+              <p>Level {String(scan.qr_levels?.level_number || 0).padStart(2, '0')}</p>
+              <p>{scan.result}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Leaderboard */}
-      <div className="bg-[var(--surface)] border border-white/[0.06] rounded-2xl p-6">
-        <h2 className="text-xl font-black text-[var(--foreground)] uppercase tracking-tight mb-4">
-          TOP 10 PLAYERS
-        </h2>
-        <div className="overflow-hidden">
-          <table className="min-w-full divide-y divide-white/[0.06]">
-            <thead>
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-black text-[var(--accent)] uppercase tracking-wider">
-                  RANK
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-black text-[var(--accent)] uppercase tracking-wider">
-                  PLAYER
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-black text-[var(--accent)] uppercase tracking-wider">
-                  LEVEL
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-black text-[var(--accent)] uppercase tracking-wider">
-                  POINTS
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-black text-[var(--accent)] uppercase tracking-wider">
-                  STATUS
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-black text-[var(--accent)] uppercase tracking-wider">
-                  COMPLETED
-                </th>
+      <div className="chapter-admin-table-wrap">
+        <h2 className="chapter-admin-section-title">TOP 10 PLAYERS</h2>
+        <table className="chapter-admin-table">
+          <thead>
+            <tr>
+              <th>RANK</th>
+              <th>PLAYER</th>
+              <th>LEVEL</th>
+              <th>POINTS</th>
+              <th>STATUS</th>
+              <th>COMPLETED</th>
+            </tr>
+          </thead>
+          <tbody>
+            {leaderboard.map((entry, index) => (
+              <tr key={entry.user_id}>
+                <td>#{index + 1}</td>
+                <td>{entry.profiles?.full_name || "Anonymous"}</td>
+                <td>{entry.current_level}</td>
+                <td>{entry.total_points}</td>
+                <td>{entry.status.toUpperCase()}</td>
+                <td>{entry.completed_at ? new Date(entry.completed_at).toLocaleDateString() : "—"}</td>
               </tr>
-            </thead>
-            <tbody className="bg-[var(--background)] divide-y divide-white/[0.06]">
-              {leaderboard.map((entry: LeaderboardEntry, index: number) => (
-                <tr key={entry.user_id} className="hover:bg-[var(--surface)]/20 transition-colors">
-                  <td className="px-6 py-4 text-sm font-medium text-[var(--foreground)]">
-                    #{index + 1}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-[var(--foreground)]">
-                    {entry.profiles?.full_name || "Anonymous"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-[var(--accent)] font-medium">
-                    {entry.current_level}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-[var(--accent)] font-medium">
-                    {entry.total_points}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      entry.status === "completed" ? "bg-emerald-500/20 text-emerald-400" :
-                      entry.status === "active" ? "bg-[var(--accent)]/20 text-[var(--accent)]" :
-                      "bg-[var(--surface)]/30 text-[var(--muted)]"
-                    }`}>
-                      {entry.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-zinc-400">
-                    {entry.completed_at 
-                      ? new Date(entry.completed_at).toLocaleDateString()
-                      : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -331,15 +270,11 @@ function StatCard({ label, value, icon, accent }: {
   accent?: boolean;
 }) {
   return (
-    <div className={`bg-[var(--surface)] border border-white/[0.06] rounded-2xl p-6 ${accent ? "border-[var(--accent)]/30" : ""}`}>
-      <p className="text-xs text-zinc-400 uppercase tracking-wider mb-2">
-        {label}
-      </p>
-      <div className="flex items-end gap-2">
-        <span className="text-3xl">{icon}</span>
-        <span className={`text-4xl font-black ${accent ? "text-[var(--accent)]" : "text-[var(--foreground)]"}`}>
-          {value}
-        </span>
+    <div className="chapter-admin-stat-card">
+      <p className="chapter-admin-stat-label">{label}</p>
+      <div className={`chapter-admin-stat-value ${accent ? "accent" : ""}`}>
+        <span>{icon}</span>
+        <span>{value}</span>
       </div>
     </div>
   );

@@ -15,16 +15,20 @@ export function ScanResult({
 
   if (!result) {
     status = "verifying";
+  } else if (result.is_duplicate) {
+    status = "already-cleared";
+    icon = <CheckCircle className="h-6 w-6 text-[var(--accent)]/50" aria-label="Already cleared" />;
+    bgColor = "bg-[var(--surface)]/30";
+    borderColor = "border-[var(--accent)]/20";
+  } else if (result.is_expected_level === false) {
+    status = "wrong-trail";
+    icon = <AlertTriangle className="h-6 w-6 text-[var(--accent)]/50" aria-label="Wrong trail" />;
+    bgColor = "bg-[var(--surface)]/30";
+    borderColor = "border-[var(--accent)]/20";
   } else if (!result.is_valid) {
     if (result.error_message?.includes("Invalid")) {
       status = "invalid-token";
       icon = <XCircle className="h-6 w-6 text-[var(--accent)]/50" aria-label="Invalid marker" />;
-    } else if (result.error_message?.includes("Wrong trail")) {
-      status = "wrong-trail";
-      icon = <AlertTriangle className="h-6 w-6 text-[var(--accent)]/50" aria-label="Wrong trail" />;
-    } else if (result.error_message?.includes("Already cleared")) {
-      status = "already-cleared";
-      icon = <CheckCircle className="h-6 w-6 text-[var(--accent)]/50" aria-label="Already cleared" />;
     } else if (result.error_message?.includes("not active")) {
       status = "game-inactive";
       icon = <AlertTriangle className="h-6 w-6 text-[var(--accent)]/50" aria-label="Game inactive" />;
@@ -34,7 +38,7 @@ export function ScanResult({
     }
     bgColor = "bg-[var(--surface)]/30";
     borderColor = "border-[var(--accent)]/20";
-  } else if (result.is_valid && !showAnswerChallenge) {
+  } else if (result.is_valid) {
     status = "valid";
     icon = <CheckCircle className="h-6 w-6 text-[var(--accent)]" aria-label="Marker found" />;
     bgColor = "bg-[var(--accent)]/20";
@@ -141,7 +145,7 @@ interface ValidationResult {
   current_level: number;
   total_points: number;
   location_riddle: string;
-  answer_riddle_hash: string;
+  answer_riddle: string;
   case_sensitive: boolean;
   error_message: string | null;
 }

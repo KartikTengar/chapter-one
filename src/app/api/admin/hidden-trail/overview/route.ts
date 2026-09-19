@@ -6,7 +6,6 @@ import {
   getLeaderboardAdmin
 } from "@/lib/hidden-trail/admin";
 import type { 
-  GameConfig, 
   GameLevel, 
   ScanLogWithRelations, 
   LeaderboardEntry 
@@ -14,13 +13,41 @@ import type {
 
 export async function GET() {
   try {
-    const gameId = "00000000-0000-0000-0000-000000000001";
+    // Handle missing game as empty state, not server error
+    let gameConfig = null;
+    try {
+      gameConfig = await getGameConfigAdmin();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const isNotFound = 
+        message.includes("No rows found") ||
+        message.includes("Row not found") ||
+        message.includes("PGRST116");
+      if (!isNotFound) {
+        throw err;
+      }
+      // gameConfig stays null for empty state
+    }
+
+    if (!gameConfig) {
+      return NextResponse.json({
+        gameConfig: null,
+        stats: {
+          totalParticipants: 0,
+          activeParticipants: 0,
+          challengesCompleted: 0,
+          averageProgress: 0
+        },
+        recentScans: [],
+        leaderboard: [],
+        levelStats: []
+      });
+    }
     
-    const [gameConfig, gameLevels, recentScans, leaderboard] = await Promise.all([
-      getGameConfigAdmin(gameId),
-      getGameLevelsAdmin(gameId),
-      getScanLogsAdmin(gameId, 20),
-      getLeaderboardAdmin(gameId, 10),
+    const [gameLevels, recentScans, leaderboard] = await Promise.all([
+      getGameLevelsAdmin(),
+      getScanLogsAdmin(null, 20),
+      getLeaderboardAdmin(null, 10),
     ]);
 
     // Calculate level stats

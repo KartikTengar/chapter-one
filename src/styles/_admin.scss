@@ -1,0 +1,449 @@
+/* ===== ADMIN SHELL ===== */
+.chapter-admin-shell {
+  display: flex;
+  min-height: 100svh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+}
+
+.chapter-admin-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.chapter-admin-sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.chapter-admin-sidebar-header {
+  padding: 1.5rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.chapter-admin-sidebar-brand {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chapter-admin-nav {
+  flex: 1;
+  padding: 0.75rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.chapter-admin-nav-group-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 1rem 1.25rem 0.375rem;
+}
+
+.chapter-admin-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+  border-radius: 0 8px 8px 0;
+  margin: 0 0.5rem;
+}
+
+.chapter-admin-nav-link:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.chapter-admin-nav-link.is-active {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.chapter-admin-sidebar-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chapter-admin-sidebar-footer p {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.chapter-admin-content {
+  flex: 1;
+  margin-left: 260px;
+  padding: 2rem;
+  min-height: 100svh;
+}
+
+/* ===== ADMIN BUTTONS ===== */
+.chapter-admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  border-radius: var(--radius-btn);
+  border: 1px solid transparent;
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.chapter-admin-btn:hover {
+  background: rgba(245, 208, 110, 0.9);
+}
+
+.chapter-admin-btn-outline {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.chapter-admin-btn-outline:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--muted);
+}
+
+.chapter-admin-btn-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ===== ADMIN CARDS ===== */
+.chapter-admin-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.chapter-admin-stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 1.25rem;
+}
+
+.chapter-admin-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+
+.chapter-admin-stat-value {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chapter-admin-stat-value.accent span:first-child {
+  color: var(--accent);
+}
+
+/* ===== ADMIN TABLE ===== */
+.chapter-admin-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.chapter-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.chapter-admin-table th {
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.chapter-admin-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
+.chapter-admin-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ===== ADMIN BADGES ===== */
+.chapter-admin-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+}
+
+.chapter-admin-badge-accent {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* ===== ADMIN SECTION TITLE ===== */
+.chapter-admin-section-title {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* ===== ADMIN EMPTY STATE ===== */
+.chapter-admin-empty {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.chapter-admin-empty-title {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chapter-admin-empty-text {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin: 0 0 1.5rem;
+}
+
+/* ===== STAT GRID ===== */
+.chapter-admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ===== ADMIN FORM ===== */
+.chapter-admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chapter-admin-form label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.chapter-admin-form input,
+.chapter-admin-form select,
+.chapter-admin-form textarea {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-btn);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+}
+
+/* ===== ADMIN OVERVIEW ===== */
+.chapter-admin-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ===== QR PRINT ===== */
+.chapter-qr-print-container {
+  @media print {
+    background-color: white;
+    color: black;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+  }
+}
+
+.chapter-qr-print-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 1rem;
+
+  @media print {
+    border-bottom: 2px solid black;
+  }
+}
+
+.chapter-qr-print-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--accent);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+
+  @media print {
+    color: black;
+  }
+}
+
+.chapter-qr-print-subtitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0.5rem 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  @media print {
+    color: black;
+  }
+}
+
+.chapter-qr-print-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  @media print {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+.chapter-qr-code-frame {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  background-color: white;
+  border: 1px solid var(--border);
+
+  @media print {
+    border: none;
+    padding: 0;
+  }
+}
+
+.chapter-qr-print-meta {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.chapter-qr-print-meta-primary,
+.chapter-qr-print-meta-secondary,
+.chapter-qr-print-meta-tertiary,
+.chapter-qr-print-meta-destination {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.chapter-qr-print-meta-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  @media print {
+    color: black;
+  }
+}
+
+.chapter-qr-print-meta-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+
+  @media print {
+    color: black;
+  }
+}
+
+.chapter-qr-print-instructions {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+
+  @media print {
+    border-top: 1px solid black;
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+  }
+}
+
+.chapter-qr-print-instructions-text {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin: 0;
+
+  @media print {
+    color: black;
+  }
+}

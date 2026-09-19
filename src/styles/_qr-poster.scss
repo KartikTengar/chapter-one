@@ -1,0 +1,484 @@
+/* ============================================================
+   CHAPTER ONE — HIDDEN TRAIL QR POSTER
+   Screen: dark cinematic admin preview.
+   Print:  clean ivory single-page marker.
+   ============================================================ */
+
+/* ---------- Screen environment ---------- */
+.ht-poster-page {
+  min-height: 100svh;
+  background:
+    radial-gradient(1200px 600px at 70% -10%, rgba(245, 208, 110, 0.08), transparent 60%),
+    radial-gradient(900px 500px at 10% 110%, rgba(120, 138, 165, 0.12), transparent 60%),
+    var(--bg);
+  padding: var(--space-6) var(--space-4) var(--space-9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+
+  @media print {
+    padding: 0;
+    display: block;
+    background: #ffffff;
+  }
+}
+
+.ht-poster-controls {
+  width: 100%;
+  max-width: 820px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+
+  @media print {
+    display: none;
+  }
+}
+
+.ht-poster-controls-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  text-transform: uppercase;
+
+  span {
+    color: var(--accent);
+  }
+}
+
+/* ---------- The poster / print card ---------- */
+.ht-poster {
+  --poster-ink: #1c1712;
+  --poster-ink-soft: #4a4034;
+  --poster-gold: #b8860b;
+  --poster-gold-light: #d4af37;
+  --poster-ivory: #f5efe2;
+  --poster-ivory-2: #efe7d5;
+  --poster-ivory-3: #e6dcc5;
+  --poster-dark: #141210;
+
+  position: relative;
+  width: 100%;
+  max-width: 820px;
+  background: var(--poster-ivory);
+  color: var(--poster-ink);
+  border-radius: 4px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+  overflow: hidden;
+
+  @media print {
+    box-shadow: none;
+    border-radius: 0;
+    max-width: 100%;
+    padding: 0;
+  }
+}
+
+/* Double gold frame */
+.ht-poster::before,
+.ht-poster::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.ht-poster::before {
+  inset: 10px;
+  border: 1px solid rgba(184, 134, 11, 0.55);
+}
+
+.ht-poster::after {
+  inset: 14px;
+  border: 1px solid rgba(184, 134, 11, 0.28);
+
+  @media print {
+    inset: 9mm;
+  }
+}
+
+/* Corner ornaments */
+.ht-poster-corners {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+
+  i {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--poster-gold);
+    border-style: solid;
+    border-width: 0;
+
+    &:nth-child(1) { top: 6px; left: 6px; border-top-width: 2px; border-left-width: 2px; }
+    &:nth-child(2) { top: 6px; right: 6px; border-top-width: 2px; border-right-width: 2px; }
+    &:nth-child(3) { bottom: 6px; left: 6px; border-bottom-width: 2px; border-left-width: 2px; }
+    &:nth-child(4) { bottom: 6px; right: 6px; border-bottom-width: 2px; border-right-width: 2px; }
+  }
+
+  @media print {
+    display: none;
+  }
+}
+
+/* ---------- Header ---------- */
+.ht-poster-header {
+  text-align: center;
+  padding: clamp(0.5rem, 1.5vw, 1rem) 0 clamp(1rem, 2vw, 1.5rem);
+  position: relative;
+
+  &::after {
+    content: "";
+    display: block;
+    width: 120px;
+    height: 1px;
+    margin: clamp(0.75rem, 1.5vw, 1.25rem) auto 0;
+    background: linear-gradient(90deg, transparent, var(--poster-gold), transparent);
+  }
+}
+
+.ht-poster-eyebrow {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--poster-gold);
+
+  @media print { font-size: 9pt; }
+}
+
+.ht-poster-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--poster-ink);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  @media print { font-size: 30pt; }
+}
+
+.ht-poster-subtitle {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: clamp(0.7rem, 1.6vw, 0.85rem);
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--poster-ink-soft);
+
+  @media print { font-size: 9pt; }
+}
+
+/* ---------- Main two-column body ---------- */
+.ht-poster-body {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  align-items: center;
+  padding: 0 clamp(0.5rem, 2vw, 1.5rem);
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Left: QR ---------- */
+.ht-poster-qr-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ht-poster-qr {
+  background: #ffffff;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  border: 1px solid var(--poster-gold-light);
+  box-shadow: 0 0 0 4px var(--poster-ivory-3), 0 0 0 5px rgba(184, 134, 11, 0.4);
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg,
+  canvas,
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .ht-poster-qr-svg {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  @media print {
+    box-shadow: none;
+    border: 1px solid #000;
+    max-width: 96mm;
+    padding: 6mm;
+  }
+}
+
+.ht-poster-qr-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--poster-dark);
+  color: var(--poster-ivory);
+  border: 1px solid var(--poster-gold-light);
+  padding: 0.55rem 1.4rem;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--poster-gold-light);
+  }
+
+  @media print { font-size: 8pt; padding: 2.5mm 5mm; }
+}
+
+/* ---------- Right: marker info ---------- */
+.ht-poster-meta {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.9rem, 2vw, 1.4rem);
+}
+
+.ht-poster-markers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+.ht-poster-marker-block {
+  .ht-poster-meta-label {
+    font-family: var(--font-ui);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--poster-gold);
+    margin: 0 0 0.2rem;
+
+    @media print { font-size: 7pt; }
+  }
+
+  .ht-poster-meta-num {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(2.2rem, 5vw, 3.2rem);
+    line-height: 1;
+    color: var(--poster-ink);
+
+    @media print { font-size: 28pt; }
+  }
+
+  .ht-poster-meta-title {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: clamp(0.8rem, 1.8vw, 1rem);
+    color: var(--poster-ink-soft);
+    margin: 0.1rem 0 0;
+
+    @media print { font-size: 11pt; }
+  }
+}
+
+.ht-poster-clue {
+  border-top: 1px solid rgba(184, 134, 11, 0.5);
+  padding-top: 1rem;
+}
+
+.ht-poster-clue-text {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(0.95rem, 2vw, 1.2rem);
+  line-height: 1.4;
+  color: var(--poster-ink);
+
+  @media print { font-size: 12pt; }
+}
+
+.ht-poster-dest {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  border-top: 1px solid rgba(184, 134, 11, 0.5);
+  padding-top: 1rem;
+
+  .ht-poster-meta-label {
+    font-family: var(--font-ui);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--poster-gold);
+
+    @media print { font-size: 7pt; }
+  }
+
+  .ht-poster-dest-name {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: clamp(0.85rem, 2vw, 1.05rem);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--poster-ink);
+
+    @media print { font-size: 11pt; }
+  }
+}
+
+/* ---------- Bottom: campus silhouette + tagline ---------- */
+.ht-poster-footer {
+  margin-top: clamp(1rem, 2.5vw, 2rem);
+  position: relative;
+  border-top: 1px solid rgba(184, 134, 11, 0.45);
+  padding-top: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+
+.ht-poster-skyline {
+  width: 100%;
+  display: block;
+  color: var(--poster-gold);
+  opacity: 0.75;
+
+  @media print {
+    opacity: 0.9;
+  }
+}
+
+.ht-poster-tagline {
+  margin: clamp(0.5rem, 1vw, 0.85rem) 0 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(0.7rem, 1.6vw, 0.85rem);
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--poster-ink-soft);
+
+  span {
+    color: var(--poster-gold);
+  }
+
+  @media print { font-size: 9pt; }
+}
+
+/* ---------- Buttons ---------- */
+.ht-poster-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.4rem;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+
+  &:hover {
+    border-color: var(--border-accent);
+    background: var(--accent-dim);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: var(--space-1);
+  }
+}
+
+.ht-poster-btn-primary {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+
+  &:hover {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+}
+
+/* ---------- Print ---------- */
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+}
+
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .ht-poster-page {
+    background: #ffffff !important;
+    gap: 0;
+  }
+
+  .ht-poster {
+    box-shadow: none;
+    color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .ht-poster-title,
+  .ht-poster-subtitle,
+  .ht-poster-meta-num,
+  .ht-poster-meta-title,
+  .ht-poster-clue-text,
+  .ht-poster-dest-name {
+    color: #000;
+  }
+
+  .ht-poster-skyline,
+  .ht-poster-tagline span,
+  .ht-poster-eyebrow {
+    color: #7a5c00;
+  }
+}

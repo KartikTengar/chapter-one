@@ -4,8 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 
 export function AnswerChallenge({
+  answerRiddle,
   onAnswerSubmit
 }: {
+  answerRiddle: string;
   onAnswerSubmit: (answer: string) => Promise<void>;
 }) {
   const [answer, setAnswer] = useState("");
@@ -53,8 +55,7 @@ export function AnswerChallenge({
         </h2>
         <div className="bg-[var(--surface)]/30 border border-white/[0.06] rounded-2xl p-8">
           <p className="text-xl text-zinc-300 italic max-w-2xl mx-auto leading-relaxed">
-            {/* In a real implementation, this would come from the scan result */}
-            &ldquo;I have keys but cannot open locks. I have space but no room. You can enter, but not go outside. What am I?&rdquo;
+            &ldquo;{answerRiddle}&rdquo;
           </p>
         </div>
       </div>

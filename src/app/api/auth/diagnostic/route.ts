@@ -1,18 +1,13 @@
+import { assertSupabaseEnv } from "@/lib/supabase/env-check";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export async function GET(_req: NextRequest) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const hasKey = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
-
+export async function GET() {
+  const headers = { "Cache-Control": "private, no-store, max-age=0", Pragma: "no-cache", Expires: "0" };
+  if (process.env.NODE_ENV !== "development") return new NextResponse(null, { status: 404, headers });
+  const config = assertSupabaseEnv();
   return NextResponse.json({
-    supabaseUrlConfigured: Boolean(url),
-    supabasePublicKeyConfigured: hasKey,
-    supabaseHost: url ? new URL(url).hostname : null,
-    supabaseUrl: url ?? null,
-    timestamp: new Date().toISOString(),
-  });
+    ok: config.ok,
+    supabaseUrlConfigured: config.url,
+    supabasePublicKeyConfigured: config.key,
+  }, { headers });
 }

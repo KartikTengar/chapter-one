@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: chapter-one-api
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: PORT
+        sync: false
+      - key: SUPABASE_URL
+        fromService:
+          type: secret
+          name: supabase-url
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        fromService:
+          type: secret
+          name: supabase-service-role-key
+      - key: SUPABASE_JWT_SECRET
+        fromService:
+          type: secret
+          name: supabase-jwt-secret
+      - key: ADMIN_EMAIL
+        fromService:
+          type: secret
+          name: admin-email
+      - key: REDIS_URL
+        fromService:
+          type: secret
+          name: redis-url
+    autoDeploy: true

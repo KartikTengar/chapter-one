@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import {
   LayoutDashboard,
   Calendar,
@@ -12,22 +13,30 @@ import {
   Image,
   User,
   Settings,
-  LogOut,
   Menu,
   X,
 } from "lucide-react";
 
 const navItems = [
   { section: "Overview", items: [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }] },
-{
+  {
       section: "Explore",
       items: [
         { href: "/events", label: "Events", icon: Calendar },
-        { href: "/hidden-trail", label: "Hidden Trail", icon: QrCode },
-        { href: "/dashboard/leaderboard", label: "Leaderboard", icon: Trophy },
+        { href: "/games", label: "Games", icon: Trophy },
+        { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
         { href: "/gallery", label: "Gallery", icon: Image },
       ],
     },
+  {
+    section: "Hidden Trail",
+    items: [
+      { href: "/hidden-trail", label: "The Trail", icon: QrCode },
+      { href: "/hidden-trail/result", label: "My Result", icon: Trophy },
+      { href: "/hidden-trail/album", label: "My Moments", icon: Image },
+      { href: "/hidden-trail/stats", label: "My Stats", icon: User },
+    ],
+  },
   {
     section: "Account",
     items: [
@@ -104,14 +113,7 @@ export function Sidebar() {
               ))}
             </nav>
             <div className="mt-auto">
-              <Link
-                href="/login"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-400/[0.05] transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-                Log Out
-              </Link>
+              <LogoutButton />
             </div>
           </motion.aside>
         </motion.div>
@@ -149,13 +151,7 @@ export function Sidebar() {
             ))}
           </nav>
           <div className="p-3 border-t border-white/[0.06]">
-            <Link
-              href="/login"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-400/[0.05] transition-colors"
-            >
-              <LogOut className="h-4 w-4" />
-              Log Out
-            </Link>
+            <LogoutButton />
           </div>
         </div>
       </aside>

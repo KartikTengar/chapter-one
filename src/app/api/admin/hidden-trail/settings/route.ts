@@ -3,8 +3,23 @@ import { getGameConfigAdmin, updateGameConfigAdmin } from "@/lib/hidden-trail/ad
 
 export async function GET() {
   try {
-    const gameId = "00000000-0000-0000-0000-000000000001";
-    const config = await getGameConfigAdmin(gameId);
+    // Handle missing game as empty state, not server error (like overview route)
+    let config = null;
+    try {
+      config = await getGameConfigAdmin();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const isNotFound = 
+        message.includes("No rows found") ||
+        message.includes("Row not found") ||
+        message.includes("PGRST116") ||
+        message.includes("Hidden Trail game is not configured");
+      if (!isNotFound) {
+        throw err;
+      }
+      // config stays null for empty state
+    }
+
     return NextResponse.json({ config });
   } catch (error) {
     console.error("Failed to load game config:", error);

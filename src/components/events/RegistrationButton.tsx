@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { registerForEvent, cancelRegistration } from "@/lib/supabase/dashboard";
+import { registerForEventApi, cancelEventRegistrationApi } from "@/lib/api/events";
 
 interface RegistrationButtonProps {
   eventId: string;
@@ -16,7 +16,6 @@ interface RegistrationButtonProps {
 
 export function RegistrationButton({
   eventId,
-  userId,
   registered,
   capacity,
   isPast,
@@ -28,8 +27,8 @@ export function RegistrationButton({
   const handleRegister = async () => {
     setLoading(true);
     try {
-      const { error } = await registerForEvent(userId, eventId);
-      if (error) throw error;
+      const res = await registerForEventApi(eventId);
+      if (!res.ok) throw new Error(res.error);
       router.refresh();
     } catch {
       // Error handled by page
@@ -41,8 +40,8 @@ export function RegistrationButton({
   const handleCancel = async () => {
     setLoading(true);
     try {
-      const { error } = await cancelRegistration(userId, eventId);
-      if (error) throw error;
+      const res = await cancelEventRegistrationApi(eventId);
+      if (!res.ok) throw new Error(res.error);
       router.refresh();
     } catch {
       // Error handled by page

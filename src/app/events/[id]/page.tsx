@@ -3,17 +3,17 @@ import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { RegistrationButton } from "@/components/events/RegistrationButton";
-import { getEventById, getEventCapacity, checkRegistration } from "@/lib/supabase/dashboard";
-import { getServerSession } from "@/lib/supabase/auth";
+import { getEventDetail, getEventCapacity } from "@/lib/api/events";
+import { checkRegistration } from "@/lib/supabase/dashboard";
+import { requireUser } from "@/lib/supabase/server";
 import { Calendar, MapPin, Clock, Users } from "lucide-react";
 
 async function getEventData(eventId: string) {
-  const [event, capacity, session] = await Promise.all([
-    getEventById(eventId),
+  const [event, capacity] = await Promise.all([
+    getEventDetail(eventId),
     getEventCapacity(eventId),
-    getServerSession(),
   ]);
-  return { event, capacity, session };
+  return { event, capacity };
 }
 
 function formatDate(dateStr: string) {
@@ -36,16 +36,19 @@ function formatTime(dateStr: string) {
 export default async function EventDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const { event, capacity, session } = await getEventData(params.id);
+  const { id } = await params;
+  const { event, capacity } = await getEventData(id);
 
   if (!event) {
     notFound();
   }
 
+  const user = await requireUser();
+  const isRegistered = user ? await checkRegistration(user.id, event.id) : false;
   const isPast = new Date(event.event_date) < new Date();
-  const isRegistered = session ? await checkRegistration(session.user.id, event.id) : false;
+  const cap = capacity ?? { registered: 0, max: null };
 
   return (
     <main className="flex-1">
@@ -117,11 +120,11 @@ export default async function EventDetailPage({
                   <Users className="h-5 w-5 text-[var(--accent)] mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm text-zinc-400">Capacity</p>
-                    <p className="text-[var(--foreground)] font-medium">
-                      {capacity.max !== null
-                        ? `${capacity.registered} / ${capacity.max}`
-                        : "Unlimited"}
-                    </p>
+                   <p className="text-[var(--foreground)] font-medium">
+                       {cap.max !== null
+                         ? `${cap.registered} / ${cap.max}`
+                         : "Unlimited"}
+                     </p>
                   </div>
                 </div>
               </div>
@@ -133,16 +136,16 @@ export default async function EventDetailPage({
                 </p>
               </div>
 
-<div className="border-t border-white/[0.06] pt-6">
-                 <Suspense fallback={<div className="h-10 w-40 bg-zinc-800 rounded-full animate-pulse" />}>
-                   <RegistrationButton
-                     eventId={event.id}
-                     userId={session?.user.id ?? ""}
-                     registered={isRegistered}
-                     capacity={capacity}
-                     isPast={isPast}
-                   />
-                 </Suspense>
+              <div className="border-t border-white/[0.06] pt-6">
+                <Suspense fallback={<div className="h-10 w-40 bg-zinc-800 rounded-full animate-pulse" />}>
+                  <RegistrationButton
+                    eventId={event.id}
+                    userId={user?.id ?? ""}
+                    registered={isRegistered}
+                    capacity={cap}
+                    isPast={isPast}
+                  />
+                </Suspense>
               </div>
             </div>
           </article>

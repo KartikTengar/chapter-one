@@ -159,9 +159,7 @@ export default function HiddenTrailPage() {
             <GameRules />
             <div className="mt-8 text-center">
               <button
-                onClick={() => {
-                  alert("Scan the first QR code to begin your journey!");
-                }}
+                onClick={() => { router.push("/hidden-trail/scan"); }}
                 className="rounded-full px-8 py-4 bg-[var(--accent)] text-[var(--background)] font-bold text-lg hover:bg-opacity-90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
               >
                 SCAN FIRST MARKER
@@ -192,12 +190,7 @@ export default function HiddenTrailPage() {
               Ready to continue your journey? Scan the next QR marker to begin.
             </p>
             <button
-              onClick={() => {
-                const token = prompt("Enter the QR token from your marker:");
-                if (token) {
-                  router.push(`/hidden-trail/scan/${token}`);
-                }
-              }}
+              onClick={() => { router.push("/hidden-trail/scan"); }}
               className="rounded-full px-8 py-4 bg-[var(--accent)] text-[var(--background)] font-bold text-lg hover:bg-opacity-90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
             >
               SCAN NEXT MARKER

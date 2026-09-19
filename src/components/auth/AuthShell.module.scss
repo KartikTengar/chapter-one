@@ -1,0 +1,162 @@
+.shell {
+  min-height: 100svh;
+  background: var(--bg);
+  color: var(--text);
+  padding: var(--space-5) var(--space-4) var(--space-7);
+  font-family: var(--font-ui);
+
+  a {
+    color: var(--accent);
+    text-underline-offset: var(--space-1);
+  }
+
+  a:hover { text-decoration: underline; }
+  a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: var(--space-1);
+    border-radius: var(--radius-btn);
+  }
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  max-width: 1400px;
+  margin: 0 auto var(--space-7);
+}
+
+.brand {
+  display: grid;
+  gap: var(--space-1);
+  font-weight: 700;
+  font-size: var(--text-body);
+  letter-spacing: 0.08em;
+  text-decoration: none;
+
+  span {
+    font-size: var(--text-meta);
+    font-weight: 400;
+    color: var(--muted);
+  }
+}
+
+.back { font-size: var(--text-label); }
+.layout { max-width: 1400px; margin-inline: auto; }
+.story { display: none; }
+.panel { max-width: 28rem; margin-inline: auto; min-width: 0; }
+.heading {
+  margin-bottom: var(--space-6);
+
+  h1 {
+    margin: var(--space-3) 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--text-h1);
+    line-height: 1.15;
+  }
+
+  > p:last-child {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--text-body);
+    line-height: 1.6;
+  }
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-size: var(--text-meta);
+  letter-spacing: 0.12em;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.form { display: grid; gap: var(--space-5); }
+.passwordField { display: grid; gap: var(--space-2); }
+.passwordToggle { justify-self: end; min-height: 44px; }
+.submit { width: 100%; min-height: 48px; }
+.formLink { justify-self: end; font-size: var(--text-label); }
+.hint { margin: 0; color: var(--muted); font-size: var(--text-label); line-height: 1.6; }
+.error, .notice {
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-btn);
+  background: var(--surface);
+  font-size: var(--text-label);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  margin: 0 0 var(--space-4);
+}
+.error { color: var(--error); border-color: var(--error); }
+.notice { color: var(--text); border-color: var(--border-accent); }
+.form .error, .form .notice { margin: 0; }
+.footer {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-5);
+  margin-top: var(--space-6);
+  font-size: var(--text-label);
+  color: var(--muted);
+  line-height: 1.7;
+
+  p { margin: 0; }
+}
+
+@media (min-width: 640px) {
+  .shell { padding: var(--space-6) var(--space-7); }
+  .topbar { margin-bottom: var(--space-8); }
+}
+
+@media (min-width: 1024px) {
+  .shell { padding: var(--space-6) var(--space-7) var(--space-7); }
+  .topbar { margin-bottom: var(--space-6); }
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: clamp(3rem, 6vw, 6rem);
+    min-height: calc(100svh - 10rem);
+    align-items: center;
+  }
+  .story {
+    display: flex;
+    position: relative;
+    align-self: stretch;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 42rem;
+    isolation: isolate;
+    padding: var(--space-7);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-surface);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .artwork {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, var(--transparent), var(--modal-backdrop) 45%, var(--bg));
+    }
+  }
+  .image { object-fit: cover; }
+  .storyCopy { position: relative; }
+  .statement {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 4.5vw, 4.5rem);
+    line-height: 1.1;
+    margin: var(--space-5) 0;
+    letter-spacing: -0.025em;
+
+    em { color: var(--accent); font-weight: 400; }
+  }
+  .storyNote { max-width: 27ch; font-size: var(--text-body); line-height: 1.7; margin: 0; }
+  .index { margin-top: var(--space-8); color: var(--muted); font-size: var(--text-meta); letter-spacing: 0.1em; }
+  .panel { width: 100%; padding-block: var(--space-6); }
+}

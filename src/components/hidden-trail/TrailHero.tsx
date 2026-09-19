@@ -16,7 +16,7 @@ export function TrailHero({
       </h1>
       <div className="flex items-center justify-center gap-4 mb-6">
         <div className="flex items-center gap-2">
-          <Image className="h-5 w-5" />
+          <Image className="h-5 w-5" aria-hidden="true" />
           <span className="text-xl font-bold text-[var(--accent)]">
             {level}
           </span>

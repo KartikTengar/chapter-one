@@ -1,0 +1,1 @@
+export const HIDDEN_TRAIL_SLUG = "hidden-trail" as const;

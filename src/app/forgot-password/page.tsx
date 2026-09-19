@@ -1,51 +1,19 @@
-"use client";
-
+import type { Metadata } from "next";
+import Link from "next/link";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
-import { motion } from "framer-motion";
+import type { AuthSearchParams } from "@/components/auth/validation";
 
-export default function ForgotPasswordPage() {
+export const metadata: Metadata = {
+  title: "Forgot password | Chapter One",
+  robots: { index: false, follow: false },
+};
+
+export default async function ForgotPasswordPage({ searchParams }: { searchParams: Promise<AuthSearchParams> }) {
+  const query = await searchParams;
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[var(--background)] px-4 py-12">
-      <div className="max-w-md w-full">
-        {/* Branding */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-black tracking-wider uppercase text-[var(--foreground)] mb-2">
-            CHAPTER ONE
-          </h1>
-          <p className="text-zinc-400 text-sm tracking-widest uppercase">
-            FRESHERS 2026
-          </p>
-        </div>
-
-        {/* Form card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-[var(--surface)] border border-white/[0.06] rounded-2xl p-8 backdrop-blur-md"
-        >
-          <h2 className="text-2xl font-bold text-[var(--foreground)] mb-1">
-            Forgot Password
-          </h2>
-          <p className="text-zinc-400 text-sm mb-6">
-            Enter your email and we&apos;ll send you a reset link.
-          </p>
-
-          <ForgotPasswordForm />
-
-          <div className="mt-6 text-center">
-            <p className="text-zinc-400 text-sm">
-              Remember your password?{" "}
-              <a
-                href="/login"
-                className="text-[var(--accent)] hover:underline font-medium transition-colors"
-              >
-                Back to login
-              </a>
-            </p>
-          </div>
-        </motion.div>
-      </div>
-    </main>
+    <AuthShell title="Find your way back." description="Enter your account email to request a password reset link. Open it in this browser." searchParams={query} footer={<p>Remember your password? <Link href="/login">Back to sign in</Link></p>}>
+      <ForgotPasswordForm />
+    </AuthShell>
   );
 }

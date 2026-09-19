@@ -11,7 +11,7 @@ export default async function AdminHiddenTrailPage() {
   }
 
   return (
-    <HiddenTrailAdminShell adminUser={adminUser}>
+    <HiddenTrailAdminShell adminUser={adminUser as any}>
       <GameOverview />
     </HiddenTrailAdminShell>
   );

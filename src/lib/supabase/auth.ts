@@ -1,115 +1,150 @@
 import { createClient } from "@/lib/supabase/client";
+import { AUTH_CONFIG_MESSAGE, isAuthConfigError } from "@/lib/auth/errors";
 
-function getSupabaseClient() {
-  return createClient();
+type ErrorDetails = { code?: string; status?: number; name?: string; message?: string };
+
+function details(error: unknown): ErrorDetails {
+  return error && typeof error === "object" ? error as ErrorDetails : {};
 }
 
-function getErrorMessage(error: unknown): string {
-  const err = error as Error & { status?: number; code?: string; name?: string; message?: string };
-  
-  // Check for specific Supabase error codes
-  if (err.code === "email_not_confirmed") {
-    return "Please check your email and confirm your account before logging in.";
+export function getAuthErrorMessage(error: unknown): string {
+  if (isAuthConfigError(error)) return AUTH_CONFIG_MESSAGE;
+  const err = details(error);
+  if (err.status === 429 || err.code === "over_email_send_rate_limit" || err.code === "over_request_rate_limit") {
+    return "Too many requests. Please wait a few minutes and try again.";
   }
-  if (err.code === "invalid_credentials") {
-    return "Invalid email or password.";
+  switch (err.code) {
+    case "invalid_credentials": return "The email or password is incorrect.";
+    case "email_not_confirmed": return "Please confirm your email before signing in. Check your inbox for the confirmation link.";
+    case "weak_password": return "Please choose a stronger password with at least 8 characters.";
+    case "same_password": return "Choose a password different from your current password.";
+    case "session_not_found":
+    case "refresh_token_not_found":
+    case "refresh_token_already_used":
+    case "otp_expired": return "This session or link has expired. Please request a new reset link.";
+    case "configuration_error": return "Authentication is temporarily unavailable. Please try again later.";
   }
-  if (err.code === "email_already_exists") {
-    return "An account with this email already exists.";
+  if (/NEXT_PUBLIC_|Invalid (supabaseUrl|URL)|supabaseUrl is required|supabaseKey is required/i.test(err.message ?? "")) {
+    return "Authentication is temporarily unavailable. Please try again later.";
   }
-  if (err.code === "weak_password") {
-    return "Password is too weak. Please use a stronger password.";
+  if (err.code === "NETWORK_ERROR" || err.name === "NetworkError" || err.name === "AuthRetryableFetchError" || err.status === 0 || /Failed to fetch|fetch failed|network|Load failed/i.test(err.message ?? "")) {
+    return "Unable to reach the authentication service. Check your connection and try again.";
   }
-  if (err.code === "over_email_send_rate_limit") {
-    return "Too many requests. Please wait a moment and try again.";
-  }
-  
-  // Check for network errors
-  const isNetworkError =
-    err.code === "NETWORK_ERROR" ||
-    err.name === "NetworkError" ||
-    err.status === 0 ||
-    err.message?.includes("Network error") ||
-    err.message?.includes("fetch failed") ||
-    err.message?.includes("Failed to fetch");
-  
-  if (isNetworkError) {
-    // Check if the error is due to invalid Supabase URL
-    const msg = err.message || "";
-    if (msg.includes("YOUR_PROJECT_REF") || msg.includes("YOUR_ANON_PUBLIC_KEY") || msg.includes("YOUR_PROJECT_REF.supabase.co")) {
-      return "Supabase configuration error: Please set valid NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local";
-    }
-    return "Unable to connect to the authentication service. Please check your connection and try again.";
-  }
-  
-  // Return the original error message if available
-  return err.message || "An unexpected error occurred. Please try again.";
+  return "Something went wrong. Please try again.";
 }
 
-export async function signUp(formData: {
-  fullName: string;
-  email: string;
-  password: string;
-}) {
-  const supabase = getSupabaseClient();
+function safeError(error: unknown) {
+  const err = details(error);
+  return {
+    message: getAuthErrorMessage(error),
+    code: typeof err.code === "string" ? err.code : "unexpected_error",
+    status: typeof err.status === "number" ? err.status : undefined,
+    name: "AuthenticationError",
+  };
+}
+
+function callbackUrl(next: "/dashboard" | "/reset-password") {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const origin = configured || (typeof window !== "undefined" ? window.location.origin : "");
   try {
-    const result = await supabase.auth.signUp({
-      email: formData.email,
+    const url = new URL(origin);
+    if (!["https:", "http:"].includes(url.protocol) || url.username || url.password || url.search || url.hash || url.pathname !== "/") {
+      throw new Error();
+    }
+    return `${url.origin}/api/auth/callback?next=${next}`;
+  } catch {
+    throw { code: "configuration_error" };
+  }
+}
+
+export async function signUp(formData: { fullName: string; email: string; password: string }) {
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signUp({
+      email: formData.email.trim(),
       password: formData.password,
       options: {
-        data: {
-          full_name: formData.fullName,
-          role: "student",
-        },
+        data: { full_name: formData.fullName.trim() },
+        emailRedirectTo: callbackUrl("/dashboard"),
       },
     });
-    return result;
+    if (error && ["user_already_exists", "email_exists", "email_already_exists"].includes(error.code ?? "")) {
+      return { data: { user: null, session: null }, error: null };
+    }
+    return { data, error: error ? safeError(error) : null };
   } catch (error: unknown) {
-    return {
-      data: { user: null, session: null },
-      error: {
-        message: getErrorMessage(error),
-        status: (error as Error & { status?: number }).status ?? 0,
-        code: (error as Error & { code?: string }).code ?? "UNKNOWN_ERROR",
-        name: (error as Error & { name?: string }).name ?? "Error",
-      },
-    };
+    return { data: { user: null, session: null }, error: safeError(error) };
   }
 }
 
 export async function signIn(email: string, password: string) {
-  const supabase = getSupabaseClient();
   try {
-    const result = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return result;
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    return { data, error: error ? safeError(error) : null };
   } catch (error: unknown) {
-    return {
-      data: { user: null, session: null },
-      error: {
-        message: getErrorMessage(error),
-        status: (error as Error & { status?: number }).status ?? 0,
-        code: (error as Error & { code?: string }).code ?? "UNKNOWN_ERROR",
-        name: (error as Error & { name?: string }).name ?? "Error",
-      },
-    };
+    return { data: { user: null, session: null }, error: safeError(error) };
   }
 }
 
 export async function signOut() {
-  const supabase = getSupabaseClient();
-  const { error } = await supabase.auth.signOut();
-  return { error: error ? { message: getErrorMessage(error) } : null };
+  try {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signOut({ scope: "local" });
+    return { error: error ? safeError(error) : null };
+  } catch (error: unknown) {
+    return { error: safeError(error) };
+  }
 }
 
 export async function resetPassword(email: string) {
-  const supabase = getSupabaseClient();
-  const result = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: "/login",
-  });
-  return result;
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: callbackUrl("/reset-password"),
+    });
+    if (error?.code === "user_not_found") return { data: {}, error: null };
+    return { data, error: error ? safeError(error) : null };
+  } catch (error: unknown) {
+    return { data: null, error: safeError(error) };
+  }
+}
+
+export async function getRecoveryUser() {
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.getUser();
+    if (error?.name === "AuthSessionMissingError") return { user: null, error: null };
+    return { user: data.user, error: error ? safeError(error) : null };
+  } catch (error: unknown) {
+    return { user: null, error: safeError(error) };
+  }
+}
+
+export async function updatePassword(password: string) {
+  try {
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error: error ? safeError(error) : null };
+  } catch (error: unknown) {
+    return { error: safeError(error) };
+  }
+}
+
+export async function finishPasswordReset() {
+  const local = await signOut();
+  if (local.error) return local;
+  try {
+    const response = await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin", cache: "no-store", redirect: "error" });
+    if (!response.ok) return { error: safeError({ status: response.status }) };
+    const result: unknown = await response.json();
+    if (!result || typeof result !== "object" || !("ok" in result) || result.ok !== true) {
+      return { error: safeError({ code: "logout_not_confirmed" }) };
+    }
+    return { error: null };
+  } catch (error: unknown) {
+    return { error: safeError(error) };
+  }
 }
 
 export async function updateProfile(userId: string, formData: {
@@ -119,18 +154,13 @@ export async function updateProfile(userId: string, formData: {
   branch?: string;
   college_id?: string;
 }) {
-  const supabase = getSupabaseClient();
-  const result = await supabase
-    .from("profiles")
-    .update(formData)
-    .eq("id", userId)
-    .select()
-    .single();
-  return result;
-}
-
-export async function getServerSession() {
-  const supabase = getSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  return session;
+  try {
+    const supabase = createClient();
+    const fields = ["full_name", "phone", "year", "branch", "college_id"] as const;
+    const updates = Object.fromEntries(fields.flatMap((key) => typeof formData[key] === "string" ? [[key, formData[key]]] : []));
+    const { data, error } = await supabase.from("profiles").update(updates).eq("id", userId).select().single();
+    return { data, error: error ? safeError(error) : null };
+  } catch (error: unknown) {
+    return { data: null, error: safeError(error) };
+  }
 }

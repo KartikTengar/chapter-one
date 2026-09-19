@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/client";
+import "server-only";
+import { createServerClient } from "@/lib/supabase/server";
 
 export interface Event {
   id: string;
@@ -12,19 +13,8 @@ export interface Event {
   created_at: string;
 }
 
-export interface ActivityItem {
-  id: string;
-  event_id: string;
-  created_at: string;
-  event_title?: string;
-}
-
-function getSupabase() {
-  return createClient();
-}
-
 export async function getUpcomingEvents(): Promise<Event[]> {
-  const supabase = getSupabase();
+  const supabase = await createServerClient();
   const { data: events, error } = await supabase
     .from("events")
     .select("*")
@@ -35,7 +25,7 @@ export async function getUpcomingEvents(): Promise<Event[]> {
 }
 
 export async function getAllEvents(): Promise<Event[]> {
-  const supabase = getSupabase();
+  const supabase = await createServerClient();
   const { data: events, error } = await supabase
     .from("events")
     .select("*")
@@ -45,7 +35,7 @@ export async function getAllEvents(): Promise<Event[]> {
 }
 
 export async function getPastEvents(): Promise<Event[]> {
-  const supabase = getSupabase();
+  const supabase = await createServerClient();
   const { data: events, error } = await supabase
     .from("events")
     .select("*")
@@ -56,7 +46,7 @@ export async function getPastEvents(): Promise<Event[]> {
 }
 
 export async function getEventCategories(): Promise<string[]> {
-  const supabase = getSupabase();
+  const supabase = await createServerClient();
   const { data: events, error } = await supabase
     .from("events")
     .select("category")
@@ -69,7 +59,7 @@ export async function getEventCategories(): Promise<string[]> {
 
 export async function searchEvents(query: string): Promise<Event[]> {
   if (!query.trim()) return [];
-  const supabase = getSupabase();
+  const supabase = await createServerClient();
   const { data: events, error } = await supabase
     .from("events")
     .select("*")
@@ -81,7 +71,7 @@ export async function searchEvents(query: string): Promise<Event[]> {
 }
 
 export async function getEventCapacity(eventId: string) {
-  const supabase = getSupabase();
+  const supabase = await createServerClient();
   const [{ count: regCount }, { data: event }] = await Promise.all([
     supabase
       .from("event_registrations")
@@ -95,20 +85,8 @@ export async function getEventCapacity(eventId: string) {
   };
 }
 
-export async function cancelRegistration(userId: string, eventId: string) {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from("event_registrations")
-    .delete()
-    .eq("user_id", userId)
-    .eq("event_id", eventId)
-    .select()
-    .single();
-  return { data, error };
-}
-
 export async function getRegisteredEventIds(userId: string) {
-  const supabase = getSupabase();
+  const supabase = await createServerClient();
   const { data: registrations, error } = await supabase
     .from("event_registrations")
     .select("event_id")
@@ -117,87 +95,8 @@ export async function getRegisteredEventIds(userId: string) {
   return (registrations ?? []).map((r) => r.event_id);
 }
 
-export async function getUserRegistrations(userId: string) {
-  const supabase = getSupabase();
-  const { data: registrations, error } = await supabase
-    .from("event_registrations")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(6);
-  if (error) return [];
-  return registrations ?? [];
-}
-
-export async function getEventsByIds(eventIds: string[]) {
-  if (eventIds.length === 0) return [];
-  const supabase = getSupabase();
-  const { data: events, error } = await supabase
-    .from("events")
-    .select("*")
-    .in("id", eventIds)
-    .order("event_date", { ascending: true });
-  if (error) return [];
-  return events ?? [];
-}
-
-export async function getProfile(userId: string) {
-  const supabase = getSupabase();
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("full_name, email, phone, year, branch, college_id, avatar_url")
-    .eq("id", userId)
-    .single();
-  if (error) return null;
-  return profile;
-}
-
-export async function getStats(userId: string) {
-  const supabase = getSupabase();
-  const [{ count: eventsCount }, { count: regsCount }] = await Promise.all([
-    supabase
-      .from("events")
-      .select("*", { count: "exact", head: true })
-      .gte("event_date", new Date().toISOString()),
-    supabase
-      .from("event_registrations")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId),
-  ]);
-  return {
-    upcomingEvents: (eventsCount ?? 0) as number,
-    registered: (regsCount ?? 0) as number,
-    gamesPlayed: 0,
-    points: 0,
-  };
-}
-
-export async function getUserActivity(
-  userId: string
-): Promise<Array<{ id: string; event_id: string; created_at: string; event_title?: string }>> {
-  const supabase = getSupabase();
-  const { data: registrations, error } = await supabase
-    .from("event_registrations")
-    .select(`
-      id,
-      event_id,
-      created_at,
-      event:events(title)
-    `)
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(5);
-  if (error) return [];
-  return (registrations ?? []).map((r) => ({
-    id: r.id,
-    event_id: r.event_id,
-    created_at: r.created_at,
-    event_title: ((r.event as unknown as { title: string })?.title) ?? undefined,
-  }));
-}
-
 export async function getEventById(eventId: string) {
-  const supabase = getSupabase();
+  const supabase = await createServerClient();
   const { data: event, error } = await supabase
     .from("events")
     .select("*")
@@ -208,7 +107,7 @@ export async function getEventById(eventId: string) {
 }
 
 export async function checkRegistration(userId: string, eventId: string) {
-  const supabase = getSupabase();
+  const supabase = await createServerClient();
   const { data: reg, error } = await supabase
     .from("event_registrations")
     .select("id")
@@ -219,14 +118,15 @@ export async function checkRegistration(userId: string, eventId: string) {
   return !!reg;
 }
 
-export async function registerForEvent(userId: string, eventId: string) {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from("event_registrations")
-    .insert({ user_id: userId, event_id: eventId })
-    .select()
+export async function getProfile(userId: string) {
+  const supabase = await createServerClient();
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("full_name, email, phone, year, branch, college_id, avatar_url")
+    .eq("id", userId)
     .single();
-  return { data, error };
+  if (error) return null;
+  return profile;
 }
 
 export function getProfileCompletion(profile: {

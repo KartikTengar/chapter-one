@@ -1,216 +1,114 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 
 interface HiddenTrailAdminShellProps {
   children: React.ReactNode;
-  adminUser: {
-    id: string;
-    email: string;
-    role: string;
-  };
+  adminUser: { id: string; email: string; role: string } | null;
 }
 
 export function HiddenTrailAdminShell({ children, adminUser }: HiddenTrailAdminShellProps) {
-  const router = useRouter();
   const pathname = usePathname();
 
+  const navLinkClass = (active: boolean) =>
+    `chapter-admin-nav-link ${active ? "is-active" : ""}`;
+
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:fixed lg:left-0 lg:top-0 lg:bottom-0 lg:w-64 lg:z-50 lg:flex lg:flex-col">
-        <div className="flex flex-col h-full bg-[var(--surface)] border-r border-white/[0.06]">
-          <div className="p-6 flex items-center gap-3">
-            <span className="text-xl font-black tracking-wider text-[var(--foreground)] uppercase">
-              CHAPTER ONE ADMIN
-            </span>
+    <div className="chapter-admin-shell">
+      <aside className="chapter-admin-sidebar">
+        <div className="chapter-admin-sidebar-inner">
+          <div className="chapter-admin-sidebar-header">
+            <span className="chapter-admin-sidebar-brand">CHAPTER ONE ADMIN</span>
           </div>
-          <nav className="flex-1 flex flex-col gap-1 px-3 py-2 overflow-y-auto">
-            <div key="Overview">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1 mt-3">
+          <nav className="chapter-admin-nav">
+<div>
+               <p className="chapter-admin-nav-group-label">Game Management</p>
+               <Link href="/admin/games" className={navLinkClass(pathname.startsWith("/admin/games"))}>
+                 <span>🎮</span>
+                 Games
+               </Link>
+             </div>
+             <div>
+               <p className="chapter-admin-nav-group-label">Overview</p>
+              <Link href="/admin/hidden-trail" className={navLinkClass(pathname === "/admin/hidden-trail")}>
+                <span>📊</span>
                 Overview
-              </p>
-              <Link
-                href="/admin/hidden-trail"
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  pathname === "/admin/hidden-trail"
-                    ? "text-[var(--accent)] bg-[var(--accent-dim)]"
-                    : "text-zinc-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4">📊</span>
-                  Overview
-                </span>
               </Link>
             </div>
-            <div key="Settings">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1 mt-3">
+            <div>
+              <p className="chapter-admin-nav-group-label">Settings</p>
+              <Link href="/admin/hidden-trail/settings" className={navLinkClass(pathname === "/admin/hidden-trail/settings")}>
+                <span>⚙️</span>
                 Settings
-              </p>
-              <Link
-                href="/admin/hidden-trail/settings"
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  pathname === "/admin/hidden-trail/settings"
-                    ? "text-[var(--accent)] bg-[var(--accent-dim)]"
-                    : "text-zinc-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4">⚙️</span>
-                  Settings
-                </span>
               </Link>
             </div>
-            <div key="Levels">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1 mt-3">
+            <div>
+              <p className="chapter-admin-nav-group-label">Levels</p>
+              <Link href="/admin/hidden-trail/levels" className={navLinkClass(pathname.startsWith("/admin/hidden-trail/levels"))}>
+                <span>📐</span>
                 Levels
-              </p>
-              <Link
-                href="/admin/hidden-trail/levels"
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  pathname === "/admin/hidden-trail/levels"
-                    ? "text-[var(--accent)] bg-[var(--accent-dim)]"
-                    : "text-zinc-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4">📐</span>
-                  Levels
-                </span>
               </Link>
             </div>
-            <div key="QR">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1 mt-3">
-                QR Management
-              </p>
-              <Link
-                href="/admin/hidden-trail/qr"
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  pathname === "/admin/hidden-trail/qr"
-                    ? "text-[var(--accent)] bg-[var(--accent-dim)]"
-                    : "text-zinc-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4">📱</span>
-                  QR Codes
-                </span>
+            <div>
+              <p className="chapter-admin-nav-group-label">QR Management</p>
+              <Link href="/admin/hidden-trail/qr" className={navLinkClass(pathname === "/admin/hidden-trail/qr")}>
+                <span>📱</span>
+                QR Codes
               </Link>
             </div>
-            <div key="Participants">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1 mt-3">
+            <div>
+              <p className="chapter-admin-nav-group-label">Participants</p>
+              <Link href="/admin/hidden-trail/participants" className={navLinkClass(pathname.startsWith("/admin/hidden-trail/participants"))}>
+                <span>👥</span>
                 Participants
-              </p>
-              <Link
-                href="/admin/hidden-trail/participants"
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  pathname === "/admin/hidden-trail/participants"
-                    ? "text-[var(--accent)] bg-[var(--accent-dim)]"
-                    : "text-zinc-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4">👥</span>
-                  Participants
-                </span>
               </Link>
             </div>
-            <div key="Live">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1 mt-3">
+            <div>
+              <p className="chapter-admin-nav-group-label">Photos</p>
+              <Link href="/admin/hidden-trail/photos" className={navLinkClass(pathname.startsWith("/admin/hidden-trail/photos"))}>
+                <span>📸</span>
+                Photos
+              </Link>
+            </div>
+            <div>
+              <p className="chapter-admin-nav-group-label">Live Monitor</p>
+              <Link href="/admin/hidden-trail/live" className={navLinkClass(pathname === "/admin/hidden-trail/live")}>
+                <span>👁️</span>
                 Live Monitor
-              </p>
-              <Link
-                href="/admin/hidden-trail/live"
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  pathname === "/admin/hidden-trail/live"
-                    ? "text-[var(--accent)] bg-[var(--accent-dim)]"
-                    : "text-zinc-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4">👁️</span>
-                  Live Monitor
-                </span>
               </Link>
             </div>
-            <div key="Analytics">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1 mt-3">
+            <div>
+              <p className="chapter-admin-nav-group-label">Analytics</p>
+              <Link href="/admin/hidden-trail/analytics" className={navLinkClass(pathname === "/admin/hidden-trail/analytics")}>
+                <span>📈</span>
                 Analytics
-              </p>
-              <Link
-                href="/admin/hidden-trail/analytics"
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  pathname === "/admin/hidden-trail/analytics"
-                    ? "text-[var(--accent)] bg-[var(--accent-dim)]"
-                    : "text-zinc-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4">📈</span>
-                  Analytics
-                </span>
               </Link>
             </div>
-            <div key="Audit">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1 mt-3">
+            <div>
+              <p className="chapter-admin-nav-group-label">Audit</p>
+              <Link href="/admin/hidden-trail/audit" className={navLinkClass(pathname === "/admin/hidden-trail/audit")}>
+                <span>📋</span>
                 Audit Log
-              </p>
-              <Link
-                href="/admin/hidden-trail/audit"
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  pathname === "/admin/hidden-trail/audit"
-                    ? "text-[var(--accent)] bg-[var(--accent-dim)]"
-                    : "text-zinc-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4">📋</span>
-                  Audit Log
-                </span>
               </Link>
             </div>
-            <div key="Simulation">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 px-3 mb-1 mt-3">
+            <div>
+              <p className="chapter-admin-nav-group-label">Simulation</p>
+              <Link href="/admin/hidden-trail/simulation" className={navLinkClass(pathname === "/admin/hidden-trail/simulation")}>
+                <span>🧪</span>
                 Simulation
-              </p>
-              <Link
-                href="/admin/hidden-trail/simulation"
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  pathname === "/admin/hidden-trail/simulation"
-                    ? "text-[var(--accent)] bg-[var(--accent-dim)]"
-                    : "text-zinc-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4">🧪</span>
-                  Simulation
-                </span>
               </Link>
             </div>
           </nav>
-          <div className="p-3 border-t border-white/[0.06]">
-            <p className="text-xs text-zinc-500 px-3 mb-2">
-              Signed in as {adminUser.email}
-            </p>
-            <a
-              href="/login"
-              onClick={(e) => {
-                e.preventDefault();
-                router.push("/login");
-              }}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-400/[0.05] transition-colors"
-            >
-              <span className="h-4 w-4">🚪</span>
-              Log Out
-            </a>
+          <div className="chapter-admin-sidebar-footer">
+            <p>Signed in as {adminUser?.email}</p>
+            <LogoutButton />
           </div>
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className={`lg:ml-64 min-h-screen`}>
+      <div className="chapter-admin-content">
         {children}
       </div>
     </div>
