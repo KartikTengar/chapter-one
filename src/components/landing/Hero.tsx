@@ -112,10 +112,10 @@ export function Hero() {
           inset: 0;
           pointer-events: none;
           z-index: 1;
-          /* Hide on mobile screens */
-          @media (max-width: 768px) {
-            display: none;
-          }
+        }
+
+        @media (max-width: 767px) {
+          .hero-3d { display: none; }
         }
         .hero-stage {
           position: relative;
@@ -126,7 +126,7 @@ export function Hero() {
           position: relative;
           z-index: 3;
           min-width: 0;
-          padding-block: var(--space-8) var(--space-6);
+          padding-block: clamp(2.75rem, 9vw, var(--space-8)) var(--space-6);
         }
         .hero-entrance {
           opacity: 1;
@@ -218,8 +218,7 @@ export function Hero() {
           position: relative;
           z-index: 1;
           min-width: 0;
-          height: 40vh;
-          height: 40svh;
+          height: clamp(270px, 40svh, 430px);
         }
         .hero-frame { position: absolute; inset: 0; overflow: hidden; clip-path: inset(0); }
         .hero-frame :global(.hero-image) { position: absolute; inset: -12px 0; }
@@ -261,6 +260,18 @@ export function Hero() {
           justify-content: center;
           border-top: 1px solid var(--border);
           padding-block: var(--space-5);
+        }
+
+        @media (max-width: 639px) {
+          .hero-content { padding-top: 2.5rem; }
+          .hero-copy { max-width: 36ch; font-size: .96rem; }
+          .hero-actions { align-items: stretch; }
+          :global(.hero-button) {
+            min-height: 48px;
+            width: 100%;
+          }
+          .hero-date { top: 7%; left: 5%; }
+          .hero-bottom { padding-block: 1rem; }
         }
         .hero-scroll {
           display: inline-flex;
