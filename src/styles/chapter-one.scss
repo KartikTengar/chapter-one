@@ -126,3 +126,126 @@ img, video, canvas, iframe {
   max-width: 100%;
 }
 
+
+/* ===== STUDENT SITE UX HARDENING ===== */
+
+.max-container {
+  width: min(100%, var(--container-max, 1400px));
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 3vw, 3rem);
+}
+
+.student-page {
+  min-height: 100svh;
+  background:
+    radial-gradient(circle at 85% 0%, rgba(245,208,110,.045), transparent 28rem),
+    var(--background);
+}
+
+.student-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.student-page-kicker {
+  margin: 0 0 .5rem;
+  color: var(--accent);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.student-page-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 500;
+  letter-spacing: -.035em;
+  line-height: 1.05;
+}
+
+.student-page-subtitle {
+  max-width: 58ch;
+  margin: .75rem 0 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.student-surface {
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-surface);
+  box-shadow: 0 18px 60px rgba(0,0,0,.16);
+}
+
+.student-button {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .7rem 1.1rem;
+  border-radius: var(--radius-btn);
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.student-button-primary { background: var(--accent); color: var(--bg); }
+.student-button-secondary { border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+
+@media (max-width: 767px) {
+  .max-container { padding-inline: 1rem; }
+  .student-page-header { align-items: stretch; flex-direction: column; }
+  .student-page-title { font-size: clamp(1.9rem, 9vw, 2.6rem); }
+}
+
+@media (max-width: 430px) {
+  .max-container { padding-inline: .875rem; }
+}
+
+/* Event cards: predictable image geometry and touch-friendly interactions. */
+.events-preview .event-card,
+.events-preview .featured-event,
+.student-event-card {
+  min-width: 0;
+}
+
+.events-preview .event-card a,
+.student-event-card a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 767px) {
+  .events-preview .featured-event-content {
+    padding: 1.25rem;
+  }
+  .events-preview .featured-event-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* Dashboard / authenticated surfaces. */
+.dashboard-content {
+  width: 100%;
+  max-width: 1500px;
+  margin-inline: auto;
+}
+
+@media (max-width: 767px) {
+  .dashboard-content { padding-inline: .875rem; }
+}
+
+/* Never allow long names, IDs or locations to break the layout. */
+:is(h1,h2,h3,h4,p,span,a,button,td,th) {
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+  }
+}
