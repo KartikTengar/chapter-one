@@ -1,5 +1,7 @@
 "use client";
 
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -37,7 +39,7 @@ export default function GamesPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[var(--background)]">
+      <><Navbar /><main className="student-page">
         <div className="max-container py-12">
           <div className="text-center">
             <div className="inline-block animate-spin h-12 w-12 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full" aria-label="Loading" />
@@ -182,7 +184,7 @@ export default function GamesPage() {
           </div>
         </section>
       </div>
-    </main>
+    </main><Footer /></>
   );
 }
 
