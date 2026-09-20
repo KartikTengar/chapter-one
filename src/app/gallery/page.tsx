@@ -1,5 +1,7 @@
 "use client";
 
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
 import { useEffect, useState, useCallback } from "react";
 import { getGallery, type GalleryPhoto } from "@/lib/api/trail";
 
@@ -58,7 +60,7 @@ export default function GalleryPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--bg)]">
+    <><Navbar /><main className="student-page">
       <div className="max-container mx-auto py-8 sm:py-12">
         <h1 className="text-4xl font-black uppercase tracking-tight text-[var(--foreground)] mb-2">Gallery</h1>
         <p className="text-[var(--muted)] mb-10">A collection of first-chapter moments.</p>
