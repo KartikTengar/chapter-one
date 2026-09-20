@@ -16,5 +16,19 @@ export default async function EventsPage() {
   const allCategories = Array.from(new Set(allEvents.map(e => e.category))).sort();
   const registeredIds = new Set(user ? await getRegisteredEventIds(user.id) : []);
 
-return (\n    <>\n      <Navbar />\n      <main className="student-page pt-8">\n        <Suspense fallback={<EventsLoading />}>\n          <EventsContent\n            events={allEvents}\n            categories={allCategories}\n            registeredIds={registeredIds}\n          />\n        </Suspense>\n      </main>\n      <Footer />\n    </>\n  );
+return (
+    <>
+      <Navbar />
+      <main className="student-page pt-8">
+        <Suspense fallback={<EventsLoading />}>
+          <EventsContent
+            events={allEvents}
+            categories={allCategories}
+            registeredIds={registeredIds}
+          />
+        </Suspense>
+      </main>
+      <Footer />
+    </>
+  );
 }
