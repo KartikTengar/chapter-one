@@ -17,7 +17,6 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@google-cloud/vision": "^4.3.3",
     "@koa/cors": "^5.0.0",
     "@koa/multer": "^4.0.0",
     "@koa/router": "^15.7.0",
