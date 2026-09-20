@@ -121,6 +121,7 @@ export interface ScanResult {
   answer_riddle: string;
   case_sensitive: boolean;
   error_message: string | null;
+  photo_feature_enabled: boolean;
 }
 
 export interface ValidationResult {
@@ -313,6 +314,7 @@ export async function processQrAnswer(token: string, userId: string, answer: str
       answer_riddle: result.answer_riddle ?? "",
       case_sensitive: false,
       error_message: null,
+      photo_feature_enabled: result.photo_feature_enabled,
     } as ScanResult;
   } catch (err) {
     const e = err as { code?: string; message?: string };
