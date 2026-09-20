@@ -11,11 +11,17 @@ export default function MasterLeaderboardPage() {
   });
   const [selectedBranch, setSelectedBranch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     setLoading(true);
+    setError(false);
     getMasterLeaderboard(selectedBranch || undefined)
-      .then((res) => { if (res) setData(res); })
+      .then((res) => {
+        if (res) setData(res);
+        else setError(true);
+      })
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [selectedBranch]);
 
@@ -24,6 +30,17 @@ export default function MasterLeaderboardPage() {
       <main className="min-h-screen bg-[var(--background)]">
         <div className="max-container py-12 flex items-center justify-center">
           <p className="text-[var(--muted)]">Loading leaderboard...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-[var(--background)]">
+        <div className="max-container py-24 text-center">
+          <h1 className="text-2xl font-black uppercase">Leaderboard unavailable</h1>
+          <p className="text-[var(--muted)] mt-2">Please try again in a moment.</p>
         </div>
       </main>
     );
@@ -54,6 +71,8 @@ export default function MasterLeaderboardPage() {
         <div className="mb-8">
           <BranchSelector value={selectedBranch} onChange={setSelectedBranch} />
         </div>
+
+        <div className="mb-8">
           {data.me ? (
             <>
               <div className="flex items-center gap-2 mb-2">
