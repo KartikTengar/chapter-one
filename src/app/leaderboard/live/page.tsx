@@ -1,19 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getLiveLeaderboardTyped, type LiveLeaderboard, type LiveRecentEvent } from "@/lib/api/trail";
+import { BranchSelector } from "@/components/leaderboard/BranchSelector";
 
 export default function LiveLeaderboardPage() {
   const [data, setData] = useState<LiveLeaderboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState<"connected" | "reconnecting" | "off">("connected");
   const [ticker, setTicker] = useState<LiveRecentEvent | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState("");
   const loadedOnce = useRef(false);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     try {
-      const d = await getLiveLeaderboardTyped();
+      const d = await getLiveLeaderboardTyped(selectedBranch || undefined);
       setData(d);
       if (d.recent && d.recent.length > 0) {
         setTicker(d.recent[0]);
@@ -63,8 +65,7 @@ export default function LiveLeaderboardPage() {
         // ignore
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refresh]);
 
   if (loading) {
     return (
@@ -94,6 +95,10 @@ export default function LiveLeaderboardPage() {
           <span className="sr-only">{connected === "connected" ? "Live" : "Reconnecting"}</span>
         </p>
       </header>
+
+      <div className="mb-8 flex justify-center">
+        <BranchSelector value={selectedBranch} onChange={setSelectedBranch} />
+      </div>
 
       <div className="grid grid-cols-3 gap-4 md:gap-8 mb-10">
         <Counter label="Players" value={data.total} />
