@@ -59,6 +59,13 @@ export function HiddenTrailAdminShell({ children, adminUser }: HiddenTrailAdminS
               </Link>
             </div>
             <div>
+              <p className="chapter-admin-nav-group-label">Leaderboard</p>
+              <Link href="/admin/hidden-trail/leaderboard" className={navLinkClass(pathname.startsWith("/admin/hidden-trail/leaderboard"))}>
+                <span>🏆</span>
+                Leaderboard
+              </Link>
+            </div>
+            <div>
               <p className="chapter-admin-nav-group-label">Participants</p>
               <Link href="/admin/hidden-trail/participants" className={navLinkClass(pathname.startsWith("/admin/hidden-trail/participants"))}>
                 <span>👥</span>
