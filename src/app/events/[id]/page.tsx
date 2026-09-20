@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
 import { RegistrationButton } from "@/components/events/RegistrationButton";
 import { getEventDetail, getEventCapacity } from "@/lib/api/events";
 import { checkRegistration } from "@/lib/supabase/dashboard";
