@@ -336,6 +336,7 @@ trailRouter.post("/answer", async (ctx) => {
     is_completed: result.is_completed,
     location_riddle: result.location_riddle ?? null,
     answer_riddle: result.answer_riddle ?? null,
+    photo_feature_enabled: game.photo_feature_enabled ?? false,
     game_id: game.id,
     level_id: answeredLevelId,
   };
