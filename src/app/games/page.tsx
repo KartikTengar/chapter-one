@@ -46,12 +46,13 @@ export default function GamesPage() {
             <p className="mt-4 text-[var(--muted)]">Loading games...</p>
           </div>
         </div>
-      </main>
+      </main><Footer />
+      </>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[var(--background)]">
+    <><Navbar /><main className="student-page">
       <div className="max-container py-12">
         <h1 className="text-4xl font-bold tracking-tighter text-[var(--accent)] mb-6">GAMES</h1>
 
