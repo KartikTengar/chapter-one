@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
 import { getGameLeaderboard, type GameLeaderboard } from "@/lib/api/leaderboard";
 import { BranchSelector } from "@/components/leaderboard/BranchSelector";
 
@@ -40,7 +42,9 @@ export default function GameLeaderboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--background)]">
+    <>
+      <Navbar />
+      <main className="student-page pt-8">
       <div className="max-container py-12">
         <Link href="/leaderboard" className="text-sm text-[var(--muted)] hover:text-[var(--accent)] mb-4">
           ← Master Leaderboard
@@ -101,5 +105,7 @@ export default function GameLeaderboardPage() {
         </div>
       </div>
     </main>
+    <Footer />
+    </>
   );
 }
