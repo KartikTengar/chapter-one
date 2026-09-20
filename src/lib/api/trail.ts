@@ -300,6 +300,7 @@ export async function getLiveLeaderboardTyped(): Promise<LiveLeaderboard> {
 export interface AdminParticipant {
   game_id: string;
   user_id: string;
+  branch: string | null;
   current_level: number;
   total_points: number;
   status: string;
@@ -314,7 +315,8 @@ export interface AdminParticipant {
 
 export async function adminGetParticipants(
   page = 1,
-  pageSize = 100
+  pageSize = 100,
+  branch?: string
 ): Promise<{
   configured: boolean;
   participants: AdminParticipant[];
@@ -330,6 +332,7 @@ export async function adminGetParticipants(
     page: String(page),
     pageSize: String(pageSize),
   });
+  if (branch) query.set("branch", branch);
   return trailFetch<{
     configured: boolean;
     participants: AdminParticipant[];
