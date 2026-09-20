@@ -1,16 +1,36 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getClientAdminUser } from "@/lib/hidden-trail/admin-client";
+import { HiddenTrailAdminShell } from "@/components/admin/hidden-trail/HiddenTrailAdminShell";
+
 export default function AdminEventsPage() {
+  const router = useRouter();
+  const [adminUser, setAdminUser] = useState<any>(null);
+
+  useEffect(() => {
+    getClientAdminUser().then((u) => {
+      if (!u) router.replace("/admin/login");
+      else setAdminUser(u);
+    });
+  }, [router]);
+
+  if (!adminUser) return null;
+
   return (
-    <main className="min-h-screen bg-[var(--background)]">
-      <div className="max-container max-w-6xl mx-auto py-8">
-        <h1 className="text-3xl font-black text-[var(--foreground)] uppercase tracking-tight mb-8">
-          Manage Events
-        </h1>
-        <div className="bg-[var(--surface)] border border-white/[0.06] rounded-2xl p-8">
-          <p className="text-zinc-400">Event management interface coming soon.</p>
+    <HiddenTrailAdminShell adminUser={adminUser}>
+      <section className="chapter-admin-overview" aria-labelledby="admin-events-title">
+        <header>
+          <p className="chapter-admin-nav-group-label" style={{ padding: 0 }}>Workspace</p>
+          <h1 id="admin-events-title">Manage Events</h1>
+        </header>
+        <div className="chapter-admin-empty">
+          <h2 className="chapter-admin-empty-title">Event management</h2>
+          <p className="chapter-admin-empty-text">The event management interface is not implemented yet.</p>
+          <span className="chapter-admin-badge">Coming soon</span>
         </div>
-      </div>
-    </main>
+      </section>
+    </HiddenTrailAdminShell>
   );
 }
