@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { HiddenTrailAdminShell } from "@/components/admin/hidden-trail/HiddenTrailAdminShell";
 import { getClientAdminUser } from "@/lib/hidden-trail/admin-client";
 import { adminGetParticipants, type AdminParticipant } from "@/lib/api/trail";
+import { BRANCH_OPTIONS, BRANCH_LABELS } from "@/lib/profile/branches";
 
 export default function ParticipantsPage() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function ParticipantsPage() {
   const [gameLoading, setGameLoading] = useState(true);
   const [hasGame, setHasGame] = useState<boolean | null>(null);
   const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState("");
   const [participants, setParticipants] = useState<AdminParticipant[]>([]);
   const [totalParticipants, setTotalParticipants] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +91,7 @@ export default function ParticipantsPage() {
     setError(null);
 
     try {
-      const data = await adminGetParticipants(1, 100);
+      const data = await adminGetParticipants(1, 100, selectedBranch || undefined);
       setParticipants(data.participants ?? []);
       setTotalParticipants(
         data.pagination?.total ?? data.participants?.length ?? 0
@@ -103,7 +105,7 @@ export default function ParticipantsPage() {
     } finally {
       setParticipantsLoading(false);
     }
-  }, []);
+  }, [selectedBranch]);
 
 
   useEffect(() => {
@@ -161,15 +163,34 @@ export default function ParticipantsPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className="chapter-admin-btn"
-            onClick={() => void loadParticipants()}
-            disabled={participantsLoading}
-            aria-busy={participantsLoading}
-          >
-            {participantsLoading ? "Refreshing…" : "Refresh"}
-          </button>
+          <div className="chapter-admin-actions">
+            <label className="chapter-admin-field">
+              <span className="chapter-admin-field-label">BRANCH</span>
+              <select
+                value={selectedBranch}
+                onChange={(event) => setSelectedBranch(event.target.value)}
+                disabled={participantsLoading}
+                className="chapter-admin-input"
+                aria-label="Filter participants by branch"
+              >
+                <option value="">All branches</option>
+                {BRANCH_OPTIONS.map((branch) => (
+                  <option key={branch.value} value={branch.value}>
+                    {BRANCH_LABELS[branch.value]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="chapter-admin-btn"
+              onClick={() => void loadParticipants()}
+              disabled={participantsLoading}
+              aria-busy={participantsLoading}
+            >
+              {participantsLoading ? "Refreshing…" : "Refresh"}
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -209,6 +230,7 @@ export default function ParticipantsPage() {
                 <thead>
                   <tr>
                     <th>NAME</th>
+                    <th>BRANCH</th>
                     <th>STATUS</th>
                     <th>CURRENT LEVEL</th>
                     <th>POINTS</th>
@@ -226,6 +248,11 @@ export default function ParticipantsPage() {
                     return (
                       <tr key={participant.user_id}>
                         <td>{displayName}</td>
+                        <td>
+                          {participant.branch
+                            ? BRANCH_LABELS[participant.branch as keyof typeof BRANCH_LABELS] ?? participant.branch
+                            : "—"}
+                        </td>
                         <td>{participant.status || "not_started"}</td>
                         <td>{participant.current_level ?? 0}</td>
                         <td>{participant.total_points ?? 0}</td>
