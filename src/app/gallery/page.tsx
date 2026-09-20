@@ -59,7 +59,7 @@ export default function GalleryPage() {
 
   return (
     <main className="min-h-screen bg-[var(--bg)]">
-      <div className="max-container mx-auto py-12 px-4">
+      <div className="max-container mx-auto py-8 sm:py-12">
         <h1 className="text-4xl font-black uppercase tracking-tight text-[var(--foreground)] mb-2">Gallery</h1>
         <p className="text-[var(--muted)] mb-10">A collection of first-chapter moments.</p>
 
@@ -90,17 +90,17 @@ export default function GalleryPage() {
 
       {lightboxIndex !== null && photos[lightboxIndex] && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+          className="gallery-lightbox fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 sm:p-8"
           role="dialog"
           aria-modal="true"
           aria-label="Photo viewer"
           onClick={closeLightbox}
         >
-          <button className="absolute top-4 right-4 text-white text-2xl px-3" onClick={closeLightbox} aria-label="Close">✕</button>
-          <button className="absolute left-4 text-white text-3xl px-3" onClick={(e) => { e.stopPropagation(); prev(); }} aria-label="Previous">‹</button>
+          <button className="absolute top-3 right-3 sm:top-5 sm:right-5 z-10 min-w-11 min-h-11 rounded-full bg-white/10 text-white text-2xl px-3 hover:bg-white/20" onClick={closeLightbox} aria-label="Close">✕</button>
+          <button className="absolute left-2 sm:left-5 z-10 min-w-11 min-h-11 rounded-full bg-white/10 text-white text-3xl px-3 hover:bg-white/20" onClick={(e) => { e.stopPropagation(); prev(); }} aria-label="Previous">‹</button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={photos[lightboxIndex].url ?? ""} alt={`Hidden Trail moment at Marker ${String(photos[lightboxIndex].level ?? "?").padStart(2, "0")}`} className="max-h-[85vh] max-w-[90vw] object-contain" onClick={(e) => e.stopPropagation()} />
-          <button className="absolute right-4 text-white text-3xl px-3" onClick={(e) => { e.stopPropagation(); next(); }} aria-label="Next">›</button>
+          <img src={photos[lightboxIndex].url ?? ""} alt={`Hidden Trail moment at Marker ${String(photos[lightboxIndex].level ?? "?").padStart(2, "0")}`} className="max-h-[78vh] sm:max-h-[85vh] max-w-[94vw] sm:max-w-[90vw] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+          <button className="absolute right-2 sm:right-5 z-10 min-w-11 min-h-11 rounded-full bg-white/10 text-white text-3xl px-3 hover:bg-white/20" onClick={(e) => { e.stopPropagation(); next(); }} aria-label="Next">›</button>
           <div className="absolute bottom-6 left-0 right-0 text-center text-white text-sm">
             {photos[lightboxIndex].display_name} — Marker {String(photos[lightboxIndex].level ?? "?").padStart(2, "0")}
           </div>
