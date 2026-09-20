@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { BRANCH_OPTIONS } from "@/lib/profile/branches";
 
 interface Profile {
   full_name: string;
@@ -61,6 +62,17 @@ export default function ProfilePage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    const fullName = form.full_name.trim();
+    if (!fullName) {
+      setError("Full name is required.");
+      return;
+    }
+    if (!form.branch) {
+      setError("Please select your branch.");
+      return;
+    }
+
     setSaving(true);
 
     const supabase = createClient();
@@ -70,7 +82,7 @@ export default function ProfilePage() {
     const { error: err } = await supabase
       .from("profiles")
       .update({
-        full_name: form.full_name,
+        full_name: fullName,
         phone: form.phone,
         year: form.year,
         branch: form.branch,
@@ -197,13 +209,26 @@ export default function ProfilePage() {
               <label className="block text-xs font-medium uppercase tracking-wider text-zinc-400 mb-2">
                 Branch
               </label>
-              <input
-                type="text"
+              <select
                 value={form.branch}
                 onChange={(e) => setForm({ ...form, branch: e.target.value })}
                 disabled={!editing}
+                required={editing}
+                aria-required={editing}
                 className="w-full rounded-xl bg-[var(--background)] border border-white/[0.06] px-4 py-3 text-[var(--foreground)] text-base outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors disabled:opacity-60"
-              />
+              >
+                <option value="">Select your branch</option>
+                {BRANCH_OPTIONS.map((branch) => (
+                  <option key={branch.value} value={branch.value}>
+                    {branch.label}
+                  </option>
+                ))}
+              </select>
+              {editing && (
+                <p className="text-xs text-zinc-500 mt-1">
+                  Select your branch from the list. This is used for branch-wise leaderboards.
+                </p>
+              )}
             </div>
 
             <div>
