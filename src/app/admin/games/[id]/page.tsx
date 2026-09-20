@@ -56,7 +56,7 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     (async () => {
       const u = await getClientAdminUser();
-      if (!u) { router.replace("/login"); return; }
+      if (!u) { router.replace("/admin/login"); return; }
       setAdminUser(u);
       try {
         const data = await gamesClient.get(id);
@@ -84,8 +84,8 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   if (loading || !adminUser) return null;
-  if (error) return <div className="chapter-admin-content"><p style={{ color: "red" }}>{error}</p></div>;
-  if (!game) return <div className="chapter-admin-content"><p>Game not found</p></div>;
+  if (error) return <HiddenTrailAdminShell adminUser={adminUser}><div className="chapter-admin-alert chapter-admin-alert--error" role="alert">{error}</div></HiddenTrailAdminShell>;
+  if (!game) return <HiddenTrailAdminShell adminUser={adminUser}><div className="chapter-admin-empty"><h1 className="chapter-admin-empty-title">Game not found</h1></div></HiddenTrailAdminShell>;
 
   return (
     <HiddenTrailAdminShell adminUser={adminUser}>
@@ -106,7 +106,7 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
             <div className="chapter-admin-card">
               <div className="row"><span>Name</span><span>{game.name}</span></div>
               <div className="row"><span>Slug</span><span>{game.slug}</span></div>
-              <div className="row"><span>Status</span><span className={`badge badge--${game.status}`}>{game.status}</span></div>
+              <div className="row"><span>Status</span><span className={`chapter-admin-badge ${game.status === "running" ? "chapter-admin-badge--active" : ""}`}>{game.status}</span></div>
               <div className="row"><span>Current</span><span>{game.is_current ? "Yes" : "No"}</span></div>
               <div className="row"><span>Score Start Level</span><span>{game.score_start_level}</span></div>
               <div className="row"><span>Starting Score</span><span>{game.starting_score}</span></div>
