@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Trophy } from "lucide-react";
 import { getMasterLeaderboard, type MasterLeaderboard } from "@/lib/api/leaderboard";
+import { BranchSelector } from "@/components/leaderboard/BranchSelector";
 
 interface DisplayRow {
   rank: number;
@@ -13,12 +14,15 @@ interface DisplayRow {
 
 export default function DashboardLeaderboardPage() {
   const [rows, setRows] = useState<DisplayRow[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-    getMasterLeaderboard()
+    setLoading(true);
+    setError(false);
+    getMasterLeaderboard(selectedBranch || undefined)
       .then((res: MasterLeaderboard | null) => {
         if (!mounted) return;
         if (!res) {
@@ -40,7 +44,7 @@ export default function DashboardLeaderboardPage() {
         if (mounted) setLoading(false);
       });
     return () => { mounted = false; };
-  }, []);
+  }, [selectedBranch]);
 
   if (loading) {
     return (
@@ -86,6 +90,9 @@ export default function DashboardLeaderboardPage() {
           <p className="text-[var(--muted)] text-sm md:text-base uppercase tracking-[0.15em]">
             Top participants across games
           </p>
+          <div className="mt-6 flex justify-center">
+            <BranchSelector value={selectedBranch} onChange={setSelectedBranch} />
+          </div>
         </div>
 
         {rows.length === 0 ? (
