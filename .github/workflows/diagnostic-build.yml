@@ -3,7 +3,7 @@ name: Diagnostic Build
 on:
   push:
     branches:
-      - diagnostic/vercel-build
+      - main
 
 jobs:
   frontend:
