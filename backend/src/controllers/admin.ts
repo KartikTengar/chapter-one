@@ -47,16 +47,21 @@ adminRouter.get("/participants", async (ctx) => {
 
     const page = Math.max(Number(ctx.query.page) || 1, 1);
     const pageSize = Math.min(Math.max(Number(ctx.query.pageSize) || 100, 1), 100);
+    const branch = typeof ctx.query.branch === "string" ? ctx.query.branch.trim() : undefined;
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    const { data, error, count } = await admin
+    let participantQuery = admin
       .from("qr_participants")
       .select(
-        "game_id, user_id, current_level, total_points, status, started_at, last_scan_at, completed_at, profiles(full_name, email)",
+        "game_id, user_id, current_level, total_points, status, started_at, last_scan_at, completed_at, profiles!inner(full_name, email, branch)",
         { count: "exact" }
       )
-      .eq("game_id", game.id)
+      .eq("game_id", game.id);
+
+    if (branch) participantQuery = participantQuery.eq("profiles.branch", branch);
+
+    const { data, error, count } = await participantQuery
       .order("total_points", { ascending: false })
       .order("completed_at", { ascending: true, nullsFirst: false })
       .range(from, to);
@@ -81,6 +86,7 @@ adminRouter.get("/participants", async (ctx) => {
         profiles: {
           full_name: profile?.full_name ?? null,
           email: profile?.email ?? null,
+          branch: profile?.branch ?? null,
         },
       };
     });
