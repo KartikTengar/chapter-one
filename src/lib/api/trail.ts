@@ -330,7 +330,17 @@ export async function adminGetParticipants(
     page: String(page),
     pageSize: String(pageSize),
   });
-  return trailFetch(`/api/v1/admin/hidden-trail/participants?${query.toString()}`);
+  return trailFetch<{
+    configured: boolean;
+    participants: AdminParticipant[];
+    pagination: {
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+      hasMore: boolean;
+    };
+  }>(`/api/v1/admin/hidden-trail/participants?${query.toString()}`);
 }
 
 export interface AdminPhoto {
