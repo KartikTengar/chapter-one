@@ -30,6 +30,78 @@ async function audit(
 export const adminRouter = new Router({ prefix: "/api/v1/admin/hidden-trail" });
 adminRouter.use(requireUser(), requireAdmin());
 
+/** GET /api/v1/admin/hidden-trail/participants — current game participant list. */
+adminRouter.get("/participants", async (ctx) => {
+  try {
+    const admin = getAdmin();
+    const game = await resolveHiddenTrailGame(admin);
+
+    if (!game) {
+      ctx.body = {
+        configured: false,
+        participants: [],
+        pagination: { page: 1, pageSize: 0, total: 0, totalPages: 0, hasMore: false },
+      };
+      return;
+    }
+
+    const page = Math.max(Number(ctx.query.page) || 1, 1);
+    const pageSize = Math.min(Math.max(Number(ctx.query.pageSize) || 100, 1), 100);
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await admin
+      .from("qr_participants")
+      .select(
+        "game_id, user_id, current_level, total_points, status, started_at, last_scan_at, completed_at, profiles(full_name, email)",
+        { count: "exact" }
+      )
+      .eq("game_id", game.id)
+      .order("total_points", { ascending: false })
+      .order("completed_at", { ascending: true, nullsFirst: false })
+      .range(from, to);
+
+    if (error) throw error;
+
+    const participants = (data ?? []).map((row) => {
+      const r = row as Record<string, unknown>;
+      const profile = Array.isArray(r.profiles)
+        ? (r.profiles[0] as { full_name?: string | null; email?: string | null } | undefined)
+        : (r.profiles as { full_name?: string | null; email?: string | null } | undefined);
+
+      return {
+        game_id: r.game_id,
+        user_id: r.user_id,
+        current_level: Number(r.current_level ?? 0),
+        total_points: Number(r.total_points ?? 0),
+        status: String(r.status ?? "not_started"),
+        started_at: r.started_at ?? null,
+        last_scan_at: r.last_scan_at ?? null,
+        completed_at: r.completed_at ?? null,
+        profiles: {
+          full_name: profile?.full_name ?? null,
+          email: profile?.email ?? null,
+        },
+      };
+    });
+
+    ctx.body = {
+      configured: true,
+      participants,
+      pagination: {
+        page,
+        pageSize,
+        total: count ?? participants.length,
+        totalPages: Math.ceil((count ?? 0) / pageSize),
+        hasMore: from + pageSize < (count ?? 0),
+      },
+    };
+  } catch {
+    ctx.status = 500;
+    ctx.body = { error: "Failed to load participants" };
+  }
+});
+
 /** GET /api/v1/admin/hidden-trail/photos — moderation queue. */
 adminRouter.get("/photos", async (ctx) => {
   try {
