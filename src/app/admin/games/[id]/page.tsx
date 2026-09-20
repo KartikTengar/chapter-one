@@ -71,11 +71,6 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
 
   async function handleAction(action: string) {
     try {
-      const body: Record<string, unknown> = { action };
-      if (action === "duplicate") {
-        body.name = game?.name + " (copy)";
-        body.slug = game?.slug + "-copy";
-      }
       await gamesClient.action(id, action, action === "duplicate" ? { name: game?.name + " (copy)", slug: game?.slug + "-copy" } : undefined);
       await loadGame();
     } catch (e) {
