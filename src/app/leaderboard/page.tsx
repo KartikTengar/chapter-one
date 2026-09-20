@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft, Crown, Sparkles, Trophy, Users } from "lucide-react";
 import { getMasterLeaderboard } from "@/lib/api/leaderboard";
+import type { MasterLeaderboard } from "@/lib/api/leaderboard";
 import { BranchSelector } from "@/components/leaderboard/BranchSelector";
 
 type LeaderboardEntry = {
@@ -20,7 +22,7 @@ type LeaderboardData = {
   } | null;
 };
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children }: { children: ReactNode }) {
   return (
     <main className="c1-leaderboard-page">
       <div className="c1-leaderboard-shell">{children}</div>
@@ -119,7 +121,7 @@ function StateCard({
 }
 
 export default function MasterLeaderboardPage() {
-  const [data, setData] = useState<LeaderboardData>({ entries: [], me: null });
+  const [data, setData] = useState<MasterLeaderboard>({ entries: [], me: null, total: 0 });
   const [selectedBranch, setSelectedBranch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -228,7 +230,7 @@ export default function MasterLeaderboardPage() {
                       {entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : "🥉"}
                     </div>
                     <h3 className="c1-podium-name">{entry.display_name || "Anonymous"}</h3>
-                    <p className="c1-podium-points">{entry.master_points} pts</p>
+                    <p className="c1-podium-points">{entry.master_points ?? entry.score ?? 0} pts</p>
                     <p className="c1-podium-label">
                       {entry.rank === 1 ? "Chapter leader" : "Master standing"}
                     </p>
