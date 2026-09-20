@@ -95,22 +95,24 @@ leaderboardRouter.get('/live', async (ctx) => {
 
     const rows = (participantsRes.data ?? []) as Array<{ user_id: string; total_points: number; status: string; completed_at: string | null }>;
     const recent = (recentRes.data ?? []) as Array<{ user_id: string; points_awarded: number; answered_at: string; qr_levels: Array<{ level_number: number }> | null }>;
+    const filteredRows = await filterEntriesByBranch(admin, rows, branch);
+    const filteredRecent = await filterEntriesByBranch(admin, recent, branch);
 
     const entries = [];
-    for (let i = 0; i < rows.length; i++) {
-      const name = await getDisplayName(admin, rows[i].user_id);
+    for (let i = 0; i < filteredRows.length; i++) {
+      const name = await getDisplayName(admin, filteredRows[i].user_id);
       entries.push({
         rank: i + 1,
         display_name: deriveDisplayName(name, mode),
-        score: Number(rows[i].total_points || 0),
+        score: Number(filteredRows[i].total_points || 0),
       });
     }
 
-    const active = rows.filter((r) => r.status === 'active').length;
-    const completed = rows.filter((r) => r.status === 'completed').length;
+    const active = filteredRows.filter((r) => r.status === 'active').length;
+    const completed = filteredRows.filter((r) => r.status === 'completed').length;
 
     const recentEvents = [];
-    for (const r of recent) {
+    for (const r of filteredRecent) {
       const name = await getDisplayName(admin, r.user_id);
       recentEvents.push({
         display_name: deriveDisplayName(name, mode),
