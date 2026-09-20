@@ -4,6 +4,7 @@ import { deriveDisplayName, type DisplayNameMode } from '../utils/trail.js';
 
 type SelectBuilder = {
   eq: (col: string, val: unknown) => SelectBuilder & Promise<{ data: unknown[] | null; error: unknown }>;
+  in: (col: string, vals: unknown[]) => SelectBuilder & Promise<{ data: unknown[] | null; error: unknown }>;
   limit: (n: number) => SelectBuilder & Promise<{ data: unknown[] | null; error: unknown }>;
   order: (col: string, opts?: { ascending?: boolean }) => SelectBuilder & Promise<{ data: unknown[] | null; error: unknown }>;
   maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: unknown }>;
@@ -29,6 +30,44 @@ async function getDisplayName(admin: SupabaseClient, userId: string): Promise<st
   return (data as Record<string, unknown>)?.full_name ? String((data as Record<string, unknown>).full_name) : 'Student';
 }
 
+async function getProfileBranches(
+  admin: SupabaseClient,
+  userIds: string[]
+): Promise<Map<string, string | null>> {
+  const uniqueIds = [...new Set(userIds)];
+  if (uniqueIds.length === 0) return new Map();
+
+  const { data, error } = await admin
+    .from('profiles')
+    .select('id, branch')
+    .in('id', uniqueIds);
+
+  if (error) throw error;
+
+  return new Map(
+    ((data ?? []) as Array<{ id: string; branch: string | null }>).map((row) => [
+      row.id,
+      row.branch ?? null,
+    ])
+  );
+}
+
+async function filterEntriesByBranch<T extends { user_id: string }>(
+  admin: SupabaseClient,
+  entries: T[],
+  branch?: string
+): Promise<T[]> {
+  const normalizedBranch = branch?.trim();
+  if (!normalizedBranch) return entries;
+
+  const branches = await getProfileBranches(
+    admin,
+    entries.map((entry) => entry.user_id)
+  );
+
+  return entries.filter((entry) => branches.get(entry.user_id) === normalizedBranch);
+}
+
 /** Public sanitized live snapshot for the big-screen display. */
 leaderboardRouter.get('/live', async (ctx) => {
   try {
@@ -42,6 +81,7 @@ leaderboardRouter.get('/live', async (ctx) => {
     }
     const game = gameRaw as Record<string, unknown>;
     const mode = (game.leaderboard_name_mode as DisplayNameMode) ?? 'FIRST_NAME';
+    const branch = typeof ctx.query.branch === 'string' ? ctx.query.branch.trim() : undefined;
 
     if (game.live_display_enabled === false) {
       ctx.body = { configured: true, status: String(game.status), live_display_enabled: false, entries: [], active: 0, completed: 0, recent: [] };
@@ -108,6 +148,7 @@ leaderboardRouter.get('/master', async (ctx) => {
     const gameResults = (gameResultsRaw ?? []) as ResultRow[];
     const hiddenResults = (hiddenResultsRaw ?? []) as ResultRow[];
 
+    const branch = typeof ctx.query.branch === 'string' ? ctx.query.branch.trim() : undefined;
     const pointsMap = new Map<string, { master_points: number, completed_at: string | null }>();
     for (const r of gameResults) {
       const cur = pointsMap.get(r.user_id) ?? { master_points: 0, completed_at: null };
@@ -120,7 +161,8 @@ leaderboardRouter.get('/master', async (ctx) => {
       pointsMap.set(r.user_id, cur);
     }
 
-    const entries = Array.from(pointsMap.entries()).map(([user_id, v]) => ({ user_id, ...v }));
+    let entries = Array.from(pointsMap.entries()).map(([user_id, v]) => ({ user_id, ...v }));
+    entries = await filterEntriesByBranch(admin, entries, branch);
     entries.sort((a, b) => b.master_points - a.master_points || (a.completed_at ? +new Date(a.completed_at) : 0) - (b.completed_at ? +new Date(b.completed_at) : 0));
 
     const userId = ctx.state.user?.id;
@@ -207,6 +249,7 @@ leaderboardRouter.get('/games/:slug', async (ctx) => {
         game_score: Number(row.total_points || 0),
         completed_at: row.completed_at,
       }));
+      entries = await filterEntriesByBranch(admin, entries, branch);
     } else {
       // Other games still use the legacy games/game_results tables.
       const { data: gameRaw, error: gErr } = await admin
@@ -244,6 +287,7 @@ leaderboardRouter.get('/games/:slug', async (ctx) => {
         game_score: Number(row.game_score || 0),
         completed_at: row.completed_at,
       }));
+      entries = await filterEntriesByBranch(admin, entries, branch);
     }
 
     entries.sort(
