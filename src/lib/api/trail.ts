@@ -297,6 +297,42 @@ export async function getLiveLeaderboardTyped(): Promise<LiveLeaderboard> {
   return trailFetch<LiveLeaderboard>("/api/v1/leaderboard/live");
 }
 
+export interface AdminParticipant {
+  game_id: string;
+  user_id: string;
+  current_level: number;
+  total_points: number;
+  status: string;
+  started_at: string | null;
+  last_scan_at: string | null;
+  completed_at: string | null;
+  profiles: {
+    full_name: string | null;
+    email: string | null;
+  } | null;
+}
+
+export async function adminGetParticipants(
+  page = 1,
+  pageSize = 100
+): Promise<{
+  configured: boolean;
+  participants: AdminParticipant[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
+}> {
+  const query = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+  });
+  return trailFetch(`/api/v1/admin/hidden-trail/participants?${query.toString()}`);
+}
+
 export interface AdminPhoto {
   id: string;
   level_number: number | null;
