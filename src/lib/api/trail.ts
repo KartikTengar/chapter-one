@@ -19,7 +19,7 @@ async function authHeaders(): Promise<Record<string, string>> {
 async function trailFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = await authHeaders();
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 15000);
+  const timeout = globalThis.setTimeout(() => controller.abort(), 15000);
   const requestHeaders = new Headers(init?.headers);
   if (!requestHeaders.has("Content-Type") && init?.body) requestHeaders.set("Content-Type", "application/json");
   Object.entries(headers).forEach(([key, value]) => requestHeaders.set(key, value));
@@ -37,7 +37,7 @@ async function trailFetch<T>(path: string, init?: RequestInit): Promise<T> {
     }
     throw error;
   } finally {
-    window.clearTimeout(timeout);
+    globalThis.clearTimeout(timeout);
   }
   if (!res.ok) {
     let data: unknown = null;
