@@ -289,7 +289,7 @@ export async function getLeaderboardAdmin(gameId?: string | null, limit: number 
     current_level: number;
     status: string;
     completed_at: string | null;
-    profiles: { full_name: string | null; email: string | null } | { full_name: string | null; email: string | null }[];
+    profiles: { full_name: string | null; email: string | null; branch: string | null } | { full_name: string | null; email: string | null; branch: string | null }[];
   }>).map(item => ({
     ...item,
     profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
@@ -626,6 +626,7 @@ export async function getParticipantsAdmin(
     level?: number | "all";
     sortBy?: "total_points" | "current_level" | "started_at" | "completed_at";
     sortOrder?: "asc" | "desc";
+    branch?: string;
   } = {}
 ) {
   const supabase = await createServerClient();
@@ -651,6 +652,7 @@ export async function getParticipantsAdmin(
     level = "all",
     sortBy = "total_points",
     sortOrder = "desc",
+    branch = "",
   } = options;
 
   // Validate page and pageSize
@@ -671,10 +673,15 @@ export async function getParticipantsAdmin(
       started_at,
       last_scan_at,
       completed_at,
-      profiles!inner(full_name, email)
+      profiles!inner(full_name, email, branch)
     `, { count: "exact" })
     .eq("game_id", resolved)
     .range(from, to);
+
+  // Apply branch filter
+  if (branch.trim()) {
+    query = query.eq("profiles.branch", branch.trim());
+  }
 
   // Apply search filter (search in full_name or email)
   if (search.trim()) {
