@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { uploadTrailPhoto } from "@/lib/api/trail";
 
 type CaptureStage = "before_answer" | "after_completion";
@@ -19,6 +19,8 @@ export function PhotoCapture({
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const objectUrlRef = useRef<string | null>(null);
+  const continuingRef = useRef(false);
 
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -29,10 +31,37 @@ export function PhotoCapture({
   const [status, setStatus] = useState<"idle" | "uploading" | "saved" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    return () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
+
+  const continueWithoutPhoto = () => {
+    if (continuingRef.current || status === "uploading") return;
+    continuingRef.current = true;
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setCameraOpen(false);
+    onSkip?.();
+  };
+
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     setCameraOpen(false);
+  };
+
+  const replacePreview = (nextFile: File) => {
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    const url = URL.createObjectURL(nextFile);
+    objectUrlRef.current = url;
+    setFile(nextFile);
+    setPreviewUrl(url);
+    setError(null);
+    setStatus("idle");
   };
 
   const openCamera = async () => {
@@ -42,12 +71,15 @@ export function PhotoCapture({
         setCameraError("Camera unavailable. Choose a photo from your device instead.");
         return;
       }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
         audio: false,
       });
+
       streamRef.current = stream;
       setCameraOpen(true);
+
       requestAnimationFrame(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -62,31 +94,35 @@ export function PhotoCapture({
   const capture = () => {
     const video = videoRef.current;
     if (!video || !video.videoWidth) return;
+
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
     ctx.drawImage(video, 0, 0);
     canvas.toBlob((blob) => {
       if (!blob) return;
-      const f = new File([blob], "moment.webp", { type: "image/webp" });
-      setFile(f);
-      setPreviewUrl(URL.createObjectURL(f));
+      replacePreview(new File([blob], "moment.webp", { type: "image/webp" }));
       stopCamera();
     }, "image/webp", 0.9);
   };
 
   const chooseFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setFile(f);
-    setPreviewUrl(URL.createObjectURL(f));
-    setError(null);
-    setStatus("idle");
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+    replacePreview(selected);
+    e.target.value = "";
   };
 
   const retake = () => {
+    if (continuingRef.current || status === "uploading") return;
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
     setPreviewUrl(null);
     setFile(null);
     setError(null);
@@ -94,12 +130,26 @@ export function PhotoCapture({
   };
 
   const submit = async () => {
-    if (!file) return;
+    if (!file || status === "uploading" || continuingRef.current) return;
+
     setStatus("uploading");
     setError(null);
+
     try {
-      const { photo } = await uploadTrailPhoto(file, levelId, captureStage, visibility, consent);
+      const { photo } = await uploadTrailPhoto(
+        file,
+        levelId,
+        captureStage,
+        visibility,
+        consent
+      );
+
       setStatus("saved");
+
+      if (continuingRef.current) return;
+      continuingRef.current = true;
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
       onSaved?.(photo.id);
     } catch (err) {
       setStatus("error");
@@ -114,16 +164,40 @@ export function PhotoCapture({
       {status === "saved" ? (
         <div className="chapter-admin-alert chapter-admin-alert-success">
           <p>Moment saved.</p>
-          <button className="chapter-admin-btn" onClick={onSkip}>Continue</button>
+          <button
+            type="button"
+            className="chapter-admin-btn"
+            onClick={continueWithoutPhoto}
+          >
+            Continue
+          </button>
         </div>
       ) : (
         <>
+          <p className="text-sm text-zinc-400 mb-4">
+            Optional. Your photo never affects your score.
+          </p>
+
           {cameraOpen && !previewUrl && (
             <div className="photo-preview-wrap">
-              <video ref={videoRef} className="photo-preview-video" playsInline muted aria-label="Camera preview" />
+              <video
+                ref={videoRef}
+                className="photo-preview-video"
+                playsInline
+                muted
+                aria-label="Camera preview"
+              />
               <div className="photo-actions">
-                <button className="chapter-admin-btn" onClick={capture}>Capture</button>
-                <button className="chapter-admin-btn chapter-admin-btn-outline" onClick={stopCamera}>Cancel</button>
+                <button type="button" className="chapter-admin-btn" onClick={capture}>
+                  Capture
+                </button>
+                <button
+                  type="button"
+                  className="chapter-admin-btn chapter-admin-btn-outline"
+                  onClick={stopCamera}
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           )}
@@ -131,39 +205,90 @@ export function PhotoCapture({
           {previewUrl && (
             <div className="photo-preview-wrap">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={previewUrl} alt="Preview of your moment" className="photo-preview-img" />
+              <img
+                src={previewUrl}
+                alt="Preview of your moment"
+                className="photo-preview-img"
+              />
               <div className="photo-actions">
-                <button className="chapter-admin-btn" onClick={submit} disabled={status === "uploading"}>
+                <button
+                  type="button"
+                  className="chapter-admin-btn"
+                  onClick={submit}
+                  disabled={status === "uploading"}
+                >
                   {status === "uploading" ? "Uploading…" : "Use Photo"}
                 </button>
-                <button className="chapter-admin-btn chapter-admin-btn-outline" onClick={retake}>Retake</button>
+                <button
+                  type="button"
+                  className="chapter-admin-btn chapter-admin-btn-outline"
+                  onClick={retake}
+                  disabled={status === "uploading"}
+                >
+                  Retake
+                </button>
+                <button
+                  type="button"
+                  className="chapter-admin-btn chapter-admin-btn-outline"
+                  onClick={continueWithoutPhoto}
+                  disabled={status === "uploading"}
+                >
+                  Skip & Continue
+                </button>
               </div>
             </div>
           )}
 
           {!cameraOpen && !previewUrl && (
             <div className="photo-actions">
-              <button className="chapter-admin-btn" onClick={openCamera}>Take Photo</button>
-              <button className="chapter-admin-btn chapter-admin-btn-outline" onClick={() => fileInputRef.current?.click()}>
+              <button type="button" className="chapter-admin-btn" onClick={openCamera}>
+                Take Photo
+              </button>
+              <button
+                type="button"
+                className="chapter-admin-btn chapter-admin-btn-outline"
+                onClick={() => fileInputRef.current?.click()}
+              >
                 Choose from Gallery
               </button>
-              <button className="chapter-admin-btn chapter-admin-btn-outline" onClick={onSkip}>Skip</button>
+              <button
+                type="button"
+                className="chapter-admin-btn chapter-admin-btn-outline"
+                onClick={continueWithoutPhoto}
+              >
+                Skip & Continue
+              </button>
             </div>
           )}
 
-          {cameraError && !previewUrl && <p className="photo-error" role="status">{cameraError}</p>}
+          {cameraError && !previewUrl && (
+            <p className="photo-error" role="status">{cameraError}</p>
+          )}
           {error && <p className="photo-error" role="status">{error}</p>}
 
           {file && (
             <div className="photo-consent">
               <label className="photo-consent-row">
-                <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                  disabled={status === "uploading"}
+                />
                 <span>
-                  Your photo can stay private, or you can choose to include it in the event gallery. It never affects your score.
+                  Keep this photo private, or choose event-gallery visibility.
+                  Gallery sharing requires your consent.
                 </span>
               </label>
               <label className="photo-consent-row">
-                <select value={visibility} onChange={(e) => setVisibility(e.target.value as "private" | "gallery")} aria-label="Photo visibility">
+                <select
+                  value={visibility}
+                  onChange={(e) =>
+                    setVisibility(e.target.value as "private" | "gallery")
+                  }
+                  disabled={status === "uploading"}
+                  aria-label="Photo visibility"
+                >
                   <option value="private">Private</option>
                   <option value="gallery">Include in event gallery</option>
                 </select>
