@@ -447,3 +447,243 @@
     color: black;
   }
 }
+
+/* ===== ADMIN TABLE WRAPPER ===== */
+.chapter-admin-table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+/* ===== ADMIN ACTIONS ===== */
+.chapter-admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chapter-admin-btn--edit {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.chapter-admin-btn--edit:hover {
+  background: rgba(245, 208, 110, 0.9);
+}
+
+.chapter-admin-btn--danger {
+  background: var(--error);
+  color: var(--bg);
+  border-color: var(--error);
+}
+
+.chapter-admin-btn--danger:hover {
+  background: rgba(239, 68, 68, 0.9);
+  border-color: var(--error);
+}
+
+.chapter-admin-btn--secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.chapter-admin-btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--muted);
+}
+
+/* ===== BADGE VARIANTS ===== */
+.chapter-admin-badge--active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.chapter-admin-badge--paused {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* ===== ADMIN CARD FOOTER ===== */
+.chapter-admin-card-footer {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ===== ADMIN EDIT FORM ===== */
+.chapter-admin-edit-row {
+  background: var(--bg);
+}
+
+.chapter-admin-edit-form {
+  padding: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.chapter-admin-edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.chapter-admin-edit-header h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.chapter-admin-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ===== ADMIN ALERTS ===== */
+.chapter-admin-alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-btn);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.chapter-admin-alert--error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.chapter-admin-alert--success {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+/* ===== ADMIN EDIT SECTIONS ===== */
+.chapter-admin-edit-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.chapter-admin-edit-section {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 1.25rem;
+  background: var(--surface);
+}
+
+.chapter-admin-edit-section legend {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 0 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.chapter-admin-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.chapter-admin-form-field--checkbox {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.chapter-admin-form-field--checkbox label {
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+.chapter-admin-textarea {
+  min-height: 100px;
+  resize: vertical;
+  font-family: var(--font-ui);
+  line-height: 1.6;
+}
+
+.chapter-admin-help-text {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.chapter-admin-help-text--warning {
+  color: var(--warning);
+  font-weight: 500;
+}
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .chapter-admin-edit-form {
+    padding: 1rem;
+  }
+
+  .chapter-admin-edit-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .chapter-admin-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .chapter-admin-edit-section {
+    padding: 1rem;
+  }
+
+  .chapter-admin-table-wrapper {
+    margin: 0 -1rem 1.5rem;
+    width: calc(100% + 2rem);
+  }
+
+  .chapter-admin-table {
+    min-width: 800px;
+  }
+
+  .chapter-admin-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .chapter-admin-actions .chapter-admin-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 430px) {
+  .chapter-admin-content {
+    padding: 1rem;
+  }
+
+  .chapter-admin-card {
+    padding: 1rem;
+  }
+
+  .chapter-admin-edit-section {
+    padding: 0.75rem;
+  }
+
+  .chapter-admin-edit-header h3 {
+    font-size: var(--text-h4);
+  }
+}
