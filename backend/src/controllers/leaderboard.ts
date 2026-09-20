@@ -157,43 +157,108 @@ leaderboardRouter.get('/games/:slug', async (ctx) => {
   const { slug } = ctx.params;
   try {
     const admin = getAdmin();
-    const { data: gameRaw, error: gErr } = await admin.from('games').select('*').eq('slug', slug).eq('is_visible', true).single();
-    if (gErr || !gameRaw) {
-      ctx.status = 404;
-      ctx.body = { error: 'Game not found' };
-      return;
-    }
-    const game = gameRaw as Record<string, unknown>;
 
     type GameEntry = { user_id: string; game_score: number; completed_at: string | null };
+    let gameName = slug;
     let entries: GameEntry[] = [];
 
     if (slug === 'hidden-trail') {
-      const gameIdRes = await admin.from('qr_games').select('id').eq('status','active').limit(1).single();
-      const gameId = (gameIdRes.data as Record<string, unknown> | null)?.id as string | undefined;
-      if (gameId) {
-        const { data, error } = await admin.from('qr_participants').select('user_id, total_points, completed_at').eq('game_id', gameId);
-        if (!error && data) {
-          const rows = data as Array<{ user_id: string; total_points: number | null; completed_at: string | null }>;
-          entries = rows.map(d => ({ user_id: d.user_id, game_score: Number(d.total_points || 0), completed_at: d.completed_at }));
-        }
+      // Hidden Trail is managed in qr_games, not the legacy games table.
+      // Resolve by slug/current game instead of requiring the old "active" status.
+      const { data: gameRaw, error: gErr } = await admin
+        .from('qr_games')
+        .select('id, slug, name, status, is_current, leaderboard_public')
+        .eq('slug', 'hidden-trail')
+        .eq('is_current', true)
+        .maybeSingle();
+
+      if (gErr || !gameRaw) {
+        ctx.status = 404;
+        ctx.body = { error: 'Game not found' };
+        return;
       }
+
+      const game = gameRaw as Record<string, unknown>;
+      gameName = String(game.name ?? 'Hidden Trail');
+
+      if (game.leaderboard_public === false) {
+        ctx.status = 403;
+        ctx.body = { error: 'Leaderboard is private' };
+        return;
+      }
+
+      const { data, error } = await admin
+        .from('qr_participants')
+        .select('user_id, total_points, completed_at')
+        .eq('game_id', String(game.id))
+        .order('total_points', { ascending: false })
+        .order('completed_at', { ascending: true });
+
+      if (error) throw error;
+
+      const rows = (data ?? []) as Array<{
+        user_id: string;
+        total_points: number | null;
+        completed_at: string | null;
+      }>;
+
+      entries = rows.map((row) => ({
+        user_id: row.user_id,
+        game_score: Number(row.total_points || 0),
+        completed_at: row.completed_at,
+      }));
     } else {
-      const gameId = (game as Record<string, unknown>).id as string;
-      const { data, error } = await admin.from('game_results').select('user_id, game_score, completed_at').eq('game_id', gameId);
-      if (!error && data) {
-        const rows = data as Array<{ user_id: string; game_score: number | null; completed_at: string | null }>;
-        entries = rows.map(d => ({ user_id: d.user_id, game_score: Number(d.game_score || 0), completed_at: d.completed_at }));
+      // Other games still use the legacy games/game_results tables.
+      const { data: gameRaw, error: gErr } = await admin
+        .from('games')
+        .select('*')
+        .eq('slug', slug)
+        .eq('is_visible', true)
+        .single();
+
+      if (gErr || !gameRaw) {
+        ctx.status = 404;
+        ctx.body = { error: 'Game not found' };
+        return;
       }
+
+      const game = gameRaw as Record<string, unknown>;
+      gameName = String(game.name ?? slug);
+
+      const gameId = String(game.id);
+      const { data, error } = await admin
+        .from('game_results')
+        .select('user_id, game_score, completed_at')
+        .eq('game_id', gameId);
+
+      if (error) throw error;
+
+      const rows = (data ?? []) as Array<{
+        user_id: string;
+        game_score: number | null;
+        completed_at: string | null;
+      }>;
+
+      entries = rows.map((row) => ({
+        user_id: row.user_id,
+        game_score: Number(row.game_score || 0),
+        completed_at: row.completed_at,
+      }));
     }
 
-    entries.sort((a,b) => b.game_score - a.game_score || (a.completed_at ? +new Date(a.completed_at) : 0) - (b.completed_at ? +new Date(b.completed_at) : 0));
+    entries.sort(
+      (a, b) =>
+        b.game_score - a.game_score ||
+        (a.completed_at ? +new Date(a.completed_at) : Number.MAX_SAFE_INTEGER) -
+          (b.completed_at ? +new Date(b.completed_at) : Number.MAX_SAFE_INTEGER)
+    );
 
     const userId = ctx.state.user?.id;
-    let meRank = null;
+    let meRank: number | null = null;
     let meScore = 0;
+
     if (userId) {
-      const idx = entries.findIndex(e => e.user_id === userId);
+      const idx = entries.findIndex((entry) => entry.user_id === userId);
       if (idx >= 0) {
         meRank = idx + 1;
         meScore = entries[idx].game_score;
@@ -202,16 +267,20 @@ leaderboardRouter.get('/games/:slug', async (ctx) => {
 
     const displayEntries = [];
     for (let i = 0; i < entries.length; i++) {
-      const e = entries[i];
-      const name = await getDisplayName(admin, e.user_id);
-      displayEntries.push({ rank: i + 1, display_name: name, score: e.game_score });
+      const entry = entries[i];
+      const name = await getDisplayName(admin, entry.user_id);
+      displayEntries.push({
+        rank: i + 1,
+        display_name: name,
+        score: entry.game_score,
+      });
     }
 
     ctx.body = {
-      game: { slug: String(game.slug), name: String(game.name) },
+      game: { slug: String(slug), name: gameName },
       entries: displayEntries,
       me: userId ? { rank: meRank, score: meScore } : null,
-      total: entries.length
+      total: entries.length,
     };
   } catch {
     ctx.status = 500;
