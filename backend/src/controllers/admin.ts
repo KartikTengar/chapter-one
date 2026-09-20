@@ -79,6 +79,7 @@ adminRouter.get("/participants", async (ctx) => {
         user_id: r.user_id,
         current_level: Number(r.current_level ?? 0),
         total_points: Number(r.total_points ?? 0),
+        branch: profile?.branch ?? null,
         status: String(r.status ?? "not_started"),
         started_at: r.started_at ?? null,
         last_scan_at: r.last_scan_at ?? null,
