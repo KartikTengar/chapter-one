@@ -98,6 +98,7 @@ const styles = css.global`
   .events-preview .featured-event {
     position: relative;
     isolation: isolate;
+    display: grid;
     overflow: hidden;
     margin-bottom: var(--space-12);
   }
@@ -197,11 +198,14 @@ const styles = css.global`
   .events-preview .event-card-image {
     position: relative;
     overflow: hidden;
+    aspect-ratio: 16 / 9;
   }
   .events-preview .event-card-image img {
     object-fit: cover;
     object-position: center;
     width: 100%;
+    height: 100%;
+    display: block;
     transition: transform var(--dur-normal) var(--ease);
   }
   .events-preview .event-card:hover .event-card-image img {
@@ -255,14 +259,29 @@ const styles = css.global`
   }
   @media (min-width: 768px) {
     .events-preview .featured-event {
-      grid-template-columns: minmax(auto, 500px) 1fr;
-      align-items: start;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+      align-items: stretch;
+      min-height: 360px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      background: var(--surface);
     }
     .events-preview .featured-event-image {
       aspect-ratio: 16 / 9;
     }
+    .events-preview .featured-event-image {
+      height: 100%;
+      min-height: 360px;
+      border-radius: var(--radius-card) 0 0 var(--radius-card);
+    }
     .events-preview .featured-event-content {
+      position: relative;
+      inset: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       padding: var(--space-8);
+      background: linear-gradient(135deg, var(--surface-2), var(--surface));
     }
   }
   @media (prefers-reduced-motion: reduce) {
