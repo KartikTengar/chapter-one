@@ -293,8 +293,9 @@ export interface LiveLeaderboard {
   recent: LiveRecentEvent[];
 }
 
-export async function getLiveLeaderboardTyped(): Promise<LiveLeaderboard> {
-  return trailFetch<LiveLeaderboard>("/api/v1/leaderboard/live");
+export async function getLiveLeaderboardTyped(branch?: string): Promise<LiveLeaderboard> {
+  const query = branch ? `?branch=${encodeURIComponent(branch)}` : "";
+  return trailFetch<LiveLeaderboard>(`/api/v1/leaderboard/live${query}`);
 }
 
 export interface AdminParticipant {
