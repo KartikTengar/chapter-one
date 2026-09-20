@@ -4,7 +4,7 @@ function resolveApiBaseUrl(): string {
 
   if (configured) {
     try {
-      return new URL(configured).origin;
+      return new URL(configured).origin.replace(/\/$/, "");
     } catch {
       throw new Error(`NEXT_PUBLIC_API_URL is invalid: "${configured}". Must be a valid URL (e.g. https://api.example.com).`);
     }
@@ -13,59 +13,101 @@ function resolveApiBaseUrl(): string {
   if (isProduction) {
     throw new Error(
       "NEXT_PUBLIC_API_URL is required in production. " +
-      "Set it in your deployment environment (e.g. Vercel Environment Variables) " +
-      "to your Koa API origin (e.g. https://api.example.com)."
+      "Set it in your deployment environment to your Koa API origin."
     );
   }
 
-  // Development fallback only
   return "http://localhost:3001";
 }
 
 let _apiBaseUrl: string | null = null;
 
 export function getApiBaseUrl(): string {
-  if (_apiBaseUrl === null) {
-    _apiBaseUrl = resolveApiBaseUrl();
-  }
+  if (_apiBaseUrl === null) _apiBaseUrl = resolveApiBaseUrl();
   return _apiBaseUrl;
 }
 
 async function getClientAuthHeaders(): Promise<Record<string, string>> {
-  // Attach the Supabase session token to Koa requests when running in the browser.
   if (typeof window === "undefined") return {};
   try {
     const { createClient } = await import("@/lib/supabase/client");
-    const {
-      data: { session },
-    } = await createClient().auth.getSession();
-    return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
+    const { data: { session } } = await createClient().auth.getSession();
+    return session?.access_token
+      ? { Authorization: `Bearer ${session.access_token}` }
+      : {};
   } catch {
     return {};
   }
 }
 
-export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const authHeaders = await getClientAuthHeaders();
-  const res = await fetch(`${getApiBaseUrl()}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders,
-      ...(init?.headers || {}),
-    },
-    credentials: 'include',
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`API error ${res.status}: ${text}`);
+function isBodylessMethod(method?: string) {
+  return method === "GET" || method === "HEAD";
+}
+
+async function readApiError(res: Response): Promise<string> {
+  const raw = await res.text();
+  if (!raw) return `Request failed (${res.status})`;
+  try {
+    const parsed = JSON.parse(raw) as {
+      error?: { message?: string } | string;
+      message?: string;
+    };
+    if (typeof parsed.error === "string") return parsed.error;
+    if (parsed.error?.message) return parsed.error.message;
+    if (parsed.message) return parsed.message;
+  } catch {
+    // Fall back to plain text.
   }
-  return (await res.json()) as T;
+  return raw.slice(0, 500);
+}
+
+export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const authHeaders = await getClientAuthHeaders();
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
+  const headers = new Headers(init.headers);
+
+  if (!headers.has("Content-Type") && !isBodylessMethod(init.method)) {
+    headers.set("Content-Type", "application/json");
+  }
+  Object.entries(authHeaders).forEach(([key, value]) => headers.set(key, value));
+
+  try {
+    const res = await fetch(`${getApiBaseUrl()}${path}`, {
+      ...init,
+      headers,
+      credentials: "include",
+      signal: init.signal ?? controller.signal,
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error(`API ${res.status}: ${await readApiError(res)}`);
+    }
+
+    if (res.status === 204) return undefined as T;
+
+    const text = await res.text();
+    if (!text) return undefined as T;
+
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      throw new Error("The server returned an invalid response.");
+    }
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("The request timed out. Please check your connection and try again.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
 }
 
 export const eventsApi = {
   list: (params?: Record<string, string>) => {
-    const q = params ? '?' + new URLSearchParams(params).toString() : '';
+    const q = params ? "?" + new URLSearchParams(params).toString() : "";
     return apiFetch<{ data: unknown[]; pagination: unknown }>(`/api/v1/events${q}`);
   },
   featured: (limit = 6) => apiFetch<{ data: unknown[] }>(`/api/v1/events/featured?limit=${limit}`),
