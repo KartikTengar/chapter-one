@@ -6,17 +6,6 @@ import { HiddenTrailAdminShell } from "@/components/admin/hidden-trail/HiddenTra
 import { getClientAdminUser } from "@/lib/hidden-trail/admin-client";
 import { adminGetParticipants, type AdminParticipant } from "@/lib/api/trail";
 
-type ParticipantsResponse = {
-  participants?: Participant[];
-  pagination?: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-    hasMore: boolean;
-  };
-};
-
 export default function ParticipantsPage() {
   const router = useRouter();
   const [adminUser, setAdminUser] = useState<
