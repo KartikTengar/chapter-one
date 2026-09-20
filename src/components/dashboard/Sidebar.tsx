@@ -54,8 +54,8 @@ export function Sidebar() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed top-4 left-4 z-50 lg:hidden rounded-full bg-[var(--surface)] border border-white/[0.06] p-3 text-[var(--foreground)] hover:bg-[var(--accent)] hover:text-[var(--background)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-        aria-label="Open navigation menu"
+        className="fixed top-4 left-4 z-50 lg:hidden rounded-xl bg-[var(--surface)] border border-white/[0.06] p-2.5 text-[var(--foreground)] min-w-11 min-h-11 hover:bg-[var(--accent)] hover:text-[var(--background)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        aria-label="Open dashboard navigation menu"
       >
         <Menu className="h-5 w-5" />
       </button>
