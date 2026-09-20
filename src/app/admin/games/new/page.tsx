@@ -9,7 +9,7 @@ import { gamesClient } from "@/lib/hidden-trail/games-client";
 
 export default function NewGamePage() {
   const router = useRouter();
-  const [adminUser, setAdminUser] = useState<{ id: string; email: string; role: string } | null>(null);
+  const [adminUser, setAdminUser] = useState<any>(null);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
@@ -19,7 +19,7 @@ export default function NewGamePage() {
 
   useEffect(() => {
     getClientAdminUser().then(u => {
-      if (!u) router.replace("/login");
+      if (!u) router.replace("/admin/login");
       else setAdminUser(u);
     });
   }, [router]);
@@ -30,18 +30,10 @@ export default function NewGamePage() {
     setError(null);
     try {
       const finalSlug = isHiddenTrail ? "hidden-trail" : slug;
-      const response = await gamesClient.create({ name, slug: finalSlug, description });
+      const response = await gamesClient.create({ name: name.trim(), slug: finalSlug, description: description.trim() });
       const game = response.data;
-      
-      if (!game.id) {
-        throw new Error("Created game is missing ID");
-      }
-      
-      // If marked as Hidden Trail game, set it as current
-      if (isHiddenTrail) {
-        await gamesClient.setCurrent(game.id);
-      }
-      
+      if (!game.id) throw new Error("Created game is missing ID");
+      if (isHiddenTrail) await gamesClient.setCurrent(game.id);
       router.push("/admin/games");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create game");
@@ -50,57 +42,51 @@ export default function NewGamePage() {
     }
   }
 
+  if (!adminUser) return null;
+
   return (
     <HiddenTrailAdminShell adminUser={adminUser}>
-      <div className="chapter-admin-content">
-        <h1>Create New Game</h1>
-        <div style={{ marginBottom: "1rem" }}>
-          <Link href="/admin/games">&larr; Back to Games</Link>
-        </div>
-        <form onSubmit={handleSubmit} className="chapter-admin-form">
-          <div className="form-field">
-            <label>Game Name</label>
-            <input value={name} onChange={e => setName(e.target.value)} required />
+      <section className="chapter-admin-overview" aria-labelledby="new-game-title">
+        <header className="chapter-admin-edit-header">
+          <div>
+            <p className="chapter-admin-nav-group-label" style={{ padding: 0 }}>Game management</p>
+            <h1 id="new-game-title">Create new game</h1>
           </div>
-          <div className="form-field">
-            <label>Slug</label>
-            <input 
-              value={slug} 
-              onChange={e => setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))} 
-              required 
-              placeholder="my-game"
-              disabled={isHiddenTrail}
-            />
-            {isHiddenTrail && <small style={{color: "#666"}}>Slug is fixed to "hidden-trail" for Hidden Trail integration</small>}
+          <Link href="/admin/games" className="chapter-admin-btn chapter-admin-btn--secondary">Back to games</Link>
+        </header>
+
+        <form onSubmit={handleSubmit} className="chapter-admin-card chapter-admin-form">
+          <div className="chapter-admin-form-field">
+            <label htmlFor="game-name">Game name</label>
+            <input id="game-name" value={name} onChange={e => setName(e.target.value)} required maxLength={120} autoComplete="off" />
           </div>
-          <div className="form-field">
-            <label>Description</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)} />
+
+          <div className="chapter-admin-form-field">
+            <label htmlFor="game-slug">Slug</label>
+            <input id="game-slug" value={slug} onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, ""))} required={!isHiddenTrail} disabled={isHiddenTrail} placeholder="my-game" maxLength={80} />
+            {isHiddenTrail && <p className="chapter-admin-help-text">Slug is fixed to <strong>hidden-trail</strong> for Hidden Trail integration.</p>}
           </div>
-          <div className="form-field" style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #eee" }}>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isHiddenTrail}
-                onChange={e => setIsHiddenTrail(e.target.checked)}
-                className="chapter-admin-checkbox"
-              />
-              <span>
-                <strong>Make this the Hidden Trail game</strong>
-                <br />
-                <small style={{color: "#666"}}>
-                  Sets slug to "hidden-trail" and marks as current Hidden Trail instance.
-                  This game will appear in the Hidden Trail dashboard at /admin/hidden-trail.
-                </small>
-              </span>
-            </label>
+
+          <div className="chapter-admin-form-field">
+            <label htmlFor="game-description">Description</label>
+            <textarea id="game-description" value={description} onChange={e => setDescription(e.target.value)} rows={5} maxLength={1000} />
           </div>
-          {error && <p style={{ color: "red" }}>{error}</p>}
-          <button type="submit" disabled={submitting} className="button">
-            {submitting ? "Creating..." : "Create Game"}
-          </button>
+
+          <label className="chapter-admin-form-field chapter-admin-form-field--checkbox">
+            <input type="checkbox" checked={isHiddenTrail} onChange={e => setIsHiddenTrail(e.target.checked)} />
+            <span><strong>Make this the Hidden Trail game</strong><br /><small className="chapter-admin-help-text">Sets the slug to hidden-trail and marks this instance as current.</small></span>
+          </label>
+
+          {error && <div className="chapter-admin-alert chapter-admin-alert--error" role="alert">{error}</div>}
+
+          <div className="chapter-admin-btn-group">
+            <button type="submit" disabled={submitting} className="chapter-admin-btn">
+              {submitting ? "Creating…" : "Create game"}
+            </button>
+            <Link href="/admin/games" className="chapter-admin-btn chapter-admin-btn--secondary">Cancel</Link>
+          </div>
         </form>
-      </div>
+      </section>
     </HiddenTrailAdminShell>
   );
 }
