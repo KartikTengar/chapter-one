@@ -26,6 +26,7 @@ export default function ScanTokenPage({
   const [error, setError] = useState<string | null>(null);
   const [showAnswerChallenge, setShowAnswerChallenge] = useState(false);
   const [completedLevelId, setCompletedLevelId] = useState<string | null>(null);
+  const [photoFeatureEnabled, setPhotoFeatureEnabled] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -86,6 +87,16 @@ export default function ScanTokenPage({
       if (result) {
         setScanResult(result);
         setShowAnswerChallenge(false);
+        setPhotoFeatureEnabled(result.photo_feature_enabled);
+
+        if (!result.photo_feature_enabled) {
+          const destination = result.is_completed
+            ? "/hidden-trail/result"
+            : "/hidden-trail";
+          router.replace(destination);
+          return;
+        }
+
         setCompletedLevelId(result.level_id || null);
       }
     } catch (err) {
@@ -105,7 +116,13 @@ export default function ScanTokenPage({
   };
 
   // Success + optional photo moment after a cleared marker.
-  if (scanResult && scanResult.is_valid && !showAnswerChallenge && completedLevelId) {
+  if (
+    scanResult &&
+    scanResult.is_valid &&
+    !showAnswerChallenge &&
+    completedLevelId &&
+    photoFeatureEnabled
+  ) {
     return (
       <div className="min-h-screen bg-[var(--background)]">
         <div className="max-container mx-auto py-10 px-4">
