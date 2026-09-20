@@ -89,21 +89,21 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
 
   return (
     <HiddenTrailAdminShell adminUser={adminUser}>
-      <div className="chapter-admin-content">
+      <section className="chapter-admin-overview">
         <h1>{game.name}</h1>
         <div style={{ marginBottom: "1rem" }}>
           <Link href="/admin/games">&larr; Back to Games</Link>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+        <div className="chapter-admin-btn-group" role="tablist" aria-label="Game sections">
           {(["overview", "levels", "readiness", "lifecycle"] as Tab[]).map(t => (
-            <button key={t} onClick={() => setTab(t)} className={tab === t ? "button is-active" : "button"}>{t}</button>
+            <button key={t} onClick={() => setTab(t)} className={`chapter-admin-btn ${tab === t ? "" : "chapter-admin-btn--secondary"}`} role="tab" aria-selected={tab === t}>{t}</button>
           ))}
         </div>
 
         {tab === "overview" && (
           <div>
             <h2>Metadata</h2>
-            <div className="chapter-admin-table">
+            <div className="chapter-admin-card">
               <div className="row"><span>Name</span><span>{game.name}</span></div>
               <div className="row"><span>Slug</span><span>{game.slug}</span></div>
               <div className="row"><span>Status</span><span className={`badge badge--${game.status}`}>{game.status}</span></div>
@@ -123,14 +123,14 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
           <div>
             <h2>Levels</h2>
             <p>Configure 10 levels with riddles, answers, and QR tokens.</p>
-            <Link href={`/admin/hidden-trail/levels`} className="button">Manage Levels</Link>
+            <Link href={`/admin/hidden-trail/levels`} className="chapter-admin-btn">Manage Levels</Link>
           </div>
         )}
 
         {tab === "readiness" && (
           <div>
             <h2>Readiness</h2>
-            <button onClick={() => handleAction("readiness")} className="button">Run Readiness Check</button>
+            <button onClick={() => handleAction("readiness")} className="chapter-admin-btn">Run Readiness Check</button>
             {game.readiness && (
               <div style={{ marginTop: "1rem" }}>
                 <p>Checked: {game.readiness_checked_at}</p>
@@ -144,21 +144,21 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
         {tab === "lifecycle" && (
           <div>
             <h2>Lifecycle</h2>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-              {game.status === "ready" && <button onClick={() => handleAction("start")}>Start</button>}
-              {game.status === "running" && <button onClick={() => handleAction("pause")}>Pause</button>}
-              {game.status === "paused" && <button onClick={() => handleAction("resume")}>Resume</button>}
-              {(game.status === "running" || game.status === "paused") && <button onClick={() => handleAction("end")}>End</button>}
-              {(game.status === "draft" || game.status === "ended") && <button onClick={() => handleAction("archive")}>Archive</button>}
-              {(game.status === "draft" || game.status === "ready") && <button onClick={() => handleAction("ready")}>Mark Ready</button>}
+            <div className="chapter-admin-actions">
+              {game.status === "ready" && <button type="button" className="chapter-admin-btn chapter-admin-btn--secondary" onClick={() => handleAction("start")}>Start</button>}
+              {game.status === "running" && <button type="button" className="chapter-admin-btn chapter-admin-btn--secondary" onClick={() => handleAction("pause")}>Pause</button>}
+              {game.status === "paused" && <button type="button" className="chapter-admin-btn chapter-admin-btn--secondary" onClick={() => handleAction("resume")}>Resume</button>}
+              {(game.status === "running" || game.status === "paused") && <button type="button" className="chapter-admin-btn chapter-admin-btn--secondary" onClick={() => handleAction("end")}>End</button>}
+              {(game.status === "draft" || game.status === "ended") && <button type="button" className="chapter-admin-btn chapter-admin-btn--secondary" onClick={() => handleAction("archive")}>Archive</button>}
+              {(game.status === "draft" || game.status === "ready") && <button type="button" className="chapter-admin-btn chapter-admin-btn--secondary" onClick={() => handleAction("ready")}>Mark Ready</button>}
               {game.status !== "running" && game.status !== "paused" && (
-                <button onClick={async () => { if (confirm("Delete this game?")) { try { await gamesClient.delete(id); router.push("/admin/games"); } catch (e) { alert(e instanceof Error ? e.message : "Delete failed"); } } }}>Delete</button>
+                <button type="button" className="chapter-admin-btn chapter-admin-btn--danger" onClick={async () => { if (confirm("Delete this game?")) { try { await gamesClient.delete(id); router.push("/admin/games"); } catch (e) { alert(e instanceof Error ? e.message : "Delete failed"); } } }}>Delete</button>
               )}
-              {!game.is_current && <button onClick={() => handleAction("setCurrent")}>Set as Current</button>}
+              {!game.is_current && <button type="button" className="chapter-admin-btn chapter-admin-btn--secondary" onClick={() => handleAction("setCurrent")}>Set as Current</button>}
             </div>
           </div>
         )}
-      </div>
+      </section>
     </HiddenTrailAdminShell>
   );
 }
