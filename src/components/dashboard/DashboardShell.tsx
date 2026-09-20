@@ -15,7 +15,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
       <Sidebar />
       <Topbar />
       <MobileNav />
-      <main className="lg:pl-64 pt-0 lg:pt-0 overflow-x-hidden">
+      <main className="lg:pl-64 pt-16 lg:pt-0 overflow-x-hidden">
         <div className="max-container py-6 sm:py-8 lg:py-10">
           {children}
         </div>
