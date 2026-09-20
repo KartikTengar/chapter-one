@@ -7,6 +7,7 @@ import { Trophy, Crown, Medal, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { getGameLeaderboard, type GameLeaderboard } from "@/lib/api/leaderboard";
 import { HiddenTrailShell } from "@/components/hidden-trail/HiddenTrailShell";
+import { BranchSelector } from "@/components/leaderboard/BranchSelector";
 
 interface LeaderboardEntry {
   user_id: string;
@@ -24,6 +25,7 @@ export default function HiddenTrailLeaderboard() {
   const router = useRouter();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [myRank, setMyRank] = useState<string | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPrivateMessage, setShowPrivateMessage] = useState(false);
@@ -36,7 +38,7 @@ export default function HiddenTrailLeaderboard() {
         setError(null);
         setShowPrivateMessage(false);
 
-        const data = await getGameLeaderboard("hidden-trail");
+        const data = await getGameLeaderboard("hidden-trail", selectedBranch || undefined);
         if (!mounted) return;
 
         if (!data) {
@@ -141,9 +143,15 @@ export default function HiddenTrailLeaderboard() {
           <h1 className="text-center text-5xl md:text-7xl font-black uppercase tracking-tight text-[var(--foreground)] mb-2 drop-shadow-[0_4px_30px_rgba(245,208,110,0.25)]">
             LEADERBOARD
           </h1>
-          <p className="text-center text-zinc-400 text-sm md:text-base tracking-[0.3em] uppercase mb-16">Live Trail Scores</p>
+          <p className="text-center text-zinc-400 text-sm md:text-base tracking-[0.3em] uppercase mb-6">
+            {selectedBranch ? "Branch-wise Trail Scores" : "All Branches · Live Trail Scores"}
+          </p>
 
-          {/* 3D Podium */}
+          <div className="mb-12 flex justify-center">
+            <BranchSelector value={selectedBranch} onChange={setSelectedBranch} />
+          </div>
+
+          {/* 3D Podium */
           <div className="flex items-end justify-center gap-2 md:gap-6 mb-16 px-2">
             {top3.length >= 2 && (
               <div className="flex flex-col items-center gap-3 w-28 md:w-36">
