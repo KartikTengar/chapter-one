@@ -4,15 +4,20 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getGameLeaderboard, type GameLeaderboard } from "@/lib/api/leaderboard";
+import { BranchSelector } from "@/components/leaderboard/BranchSelector";
 
 export default function GameLeaderboardPage() {
   const params = useParams<{ game: string }>();
   const [data, setData] = useState<GameLeaderboard | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getGameLeaderboard(params.game).then(setData).finally(() => setLoading(false));
-  }, [params.game]);
+    setLoading(true);
+    getGameLeaderboard(params.game, selectedBranch || undefined)
+      .then(setData)
+      .finally(() => setLoading(false));
+  }, [params.game, selectedBranch]);
 
   if (loading) {
     return (
@@ -43,6 +48,9 @@ export default function GameLeaderboardPage() {
         <h1 className="text-4xl font-bold tracking-tighter text-[var(--accent)] mb-4">
           {data.game.name} LEADERBOARD
         </h1>
+        <div className="mb-8">
+          <BranchSelector value={selectedBranch} onChange={setSelectedBranch} />
+        </div>
 
         {data.me ? (
           <div className="mb-6">
