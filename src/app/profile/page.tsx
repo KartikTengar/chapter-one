@@ -259,5 +259,7 @@ export default function ProfilePage() {
         </form>
       </div>
     </main>
+    <Footer />
+    </>
   );
 }
