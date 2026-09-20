@@ -3,9 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getClientAdminUser } from "@/lib/hidden-trail/admin-client";
+import { HiddenTrailAdminShell } from "@/components/admin/hidden-trail/HiddenTrailAdminShell";
+
+type AdminUser = { id: string; email: string; role: string };
 
 export default function AdminPage() {
   const router = useRouter();
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [stats, setStats] = useState({
     students: 0,
     events: 0,
@@ -13,48 +18,49 @@ export default function AdminPage() {
     upcomingEvents: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    let mounted = true;
+
+    (async () => {
+      const user = await getClientAdminUser();
       if (!user) {
-        router.replace("/login");
+        router.replace("/admin/login");
         return;
       }
+      if (!mounted) return;
+      setAdminUser(user);
 
-      const [{ data: profiles }, { data: events }, { data: regs }] = await Promise.all([
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
-        supabase.from("events").select("*", { count: "exact", head: true }),
-        supabase.from("event_registrations").select("*", { count: "exact", head: true }),
-      ]);
+      try {
+        const supabase = createClient();
+        const [{ count: students }, { count: events }, { count: registrations }, { count: upcomingEvents }] =
+          await Promise.all([
+            supabase.from("profiles").select("id", { count: "exact", head: true }),
+            supabase.from("events").select("id", { count: "exact", head: true }),
+            supabase.from("event_registrations").select("id", { count: "exact", head: true }),
+            supabase.from("events").select("id", { count: "exact", head: true }).gte("event_date", new Date().toISOString()),
+          ]);
 
-      const now = new Date().toISOString();
-      const { data: upcoming } = await supabase
-        .from("events")
-        .select("*", { count: "exact", head: true })
-        .gte("event_date", now);
+        if (mounted) {
+          setStats({
+            students: students ?? 0,
+            events: events ?? 0,
+            registrations: registrations ?? 0,
+            upcomingEvents: upcomingEvents ?? 0,
+          });
+        }
+      } catch (e) {
+        if (mounted) setError(e instanceof Error ? e.message : "Could not load dashboard statistics.");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
 
-      setStats({
-        students: profiles ? parseInt(String(profiles.length)) : 0,
-        events: events ? parseInt(String(events.length)) : 0,
-        registrations: regs ? parseInt(String(regs.length)) : 0,
-        upcomingEvents: upcoming ? parseInt(String(upcoming.length)) : 0,
-      });
-      setLoading(false);
-    }).catch(() => {
-      router.replace("/login");
-    });
+    return () => { mounted = false; };
   }, [router]);
 
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-[var(--background)] flex items-center justify-center">
-        <div className="text-[var(--accent)] text-lg font-bold animate-pulse">
-          Loading admin dashboard...
-        </div>
-      </main>
-    );
-  }
+  if (!adminUser) return null;
 
   const adminStats = [
     { label: "Total Students", value: stats.students },
@@ -64,58 +70,53 @@ export default function AdminPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[var(--background)]">
-      <div className="max-container max-w-6xl mx-auto py-8">
-        <h1 className="text-3xl font-black text-[var(--foreground)] uppercase tracking-tight mb-8">
-          Admin Dashboard
-        </h1>
+    <HiddenTrailAdminShell adminUser={adminUser}>
+      <section className="chapter-admin-overview" aria-labelledby="admin-dashboard-title">
+        <header>
+          <p className="chapter-admin-nav-group-label" style={{ padding: 0, marginBottom: "0.5rem" }}>Workspace</p>
+          <h1 id="admin-dashboard-title">Admin Dashboard</h1>
+          <p className="chapter-admin-help-text">Manage Chapter One content, users, registrations, and live game operations.</p>
+        </header>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {adminStats.map((stat) => (
-            <div
-              key={stat.label}
-              className="bg-[var(--surface)] border border-white/[0.06] rounded-2xl p-5"
-            >
-              <p className="text-xs text-zinc-400 uppercase tracking-wider mb-2">
-                {stat.label}
-              </p>
-              <p className="text-3xl font-bold text-[var(--foreground)]">
-                {stat.value}
-              </p>
-            </div>
-          ))}
-        </div>
+        {error && <div className="chapter-admin-alert chapter-admin-alert--error" role="alert">{error}</div>}
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <a
-            href="/admin/users"
-            className="bg-[var(--surface)] border border-white/[0.06] rounded-2xl p-6 hover:border-[var(--accent)]/30 transition-colors"
-          >
-            <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">
-              Manage Users
-            </h3>
-            <p className="text-sm text-zinc-400">View and manage student profiles.</p>
-          </a>
-          <a
-            href="/admin/events"
-            className="bg-[var(--surface)] border border-white/[0.06] rounded-2xl p-6 hover:border-[var(--accent)]/30 transition-colors"
-          >
-            <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">
-              Manage Events
-            </h3>
-            <p className="text-sm text-zinc-400">Create, edit, and publish events.</p>
-          </a>
-          <a
-            href="/admin/registrations"
-            className="bg-[var(--surface)] border border-white/[0.06] rounded-2xl p-6 hover:border-[var(--accent)]/30 transition-colors"
-          >
-            <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">
-              Registrations
-            </h3>
-            <p className="text-sm text-zinc-400">View and manage event registrations.</p>
-          </a>
-        </div>
-      </div>
-    </main>
+        {loading ? (
+          <div className="chapter-admin-card" role="status" aria-live="polite">
+            <p className="chapter-admin-help-text">Loading dashboard statistics…</p>
+          </div>
+        ) : (
+          <div className="chapter-admin-stat-grid">
+            {adminStats.map((stat) => (
+              <article key={stat.label} className="chapter-admin-stat-card">
+                <p className="chapter-admin-stat-label">{stat.label}</p>
+                <p className="chapter-admin-stat-value">{stat.value}</p>
+              </article>
+            ))}
+          </div>
+        )}
+
+        <section aria-labelledby="admin-quick-actions">
+          <h2 id="admin-quick-actions" className="chapter-admin-section-title">Quick actions</h2>
+          <div className="chapter-admin-stat-grid">
+            <a href="/admin/users" className="chapter-admin-card" style={{ textDecoration: "none", marginBottom: 0 }}>
+              <h3>Manage Users</h3>
+              <p className="chapter-admin-help-text">View and manage student profiles.</p>
+            </a>
+            <a href="/admin/events" className="chapter-admin-card" style={{ textDecoration: "none", marginBottom: 0 }}>
+              <h3>Manage Events</h3>
+              <p className="chapter-admin-help-text">Create, edit, and publish events.</p>
+            </a>
+            <a href="/admin/registrations" className="chapter-admin-card" style={{ textDecoration: "none", marginBottom: 0 }}>
+              <h3>Registrations</h3>
+              <p className="chapter-admin-help-text">Review event registrations.</p>
+            </a>
+            <a href="/admin/games" className="chapter-admin-card" style={{ textDecoration: "none", marginBottom: 0 }}>
+              <h3>Game Management</h3>
+              <p className="chapter-admin-help-text">Configure Hidden Trail game instances.</p>
+            </a>
+          </div>
+        </section>
+      </section>
+    </HiddenTrailAdminShell>
   );
 }
