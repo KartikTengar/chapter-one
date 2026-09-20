@@ -1,3 +1,5 @@
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
 import { Suspense } from "react";
 import { getEventsList } from "@/lib/api/events";
 import { getRegisteredEventIds } from "@/lib/supabase/dashboard";
@@ -14,13 +16,5 @@ export default async function EventsPage() {
   const allCategories = Array.from(new Set(allEvents.map(e => e.category))).sort();
   const registeredIds = new Set(user ? await getRegisteredEventIds(user.id) : []);
 
-  return (
-    <Suspense fallback={<EventsLoading />}>
-      <EventsContent
-        events={allEvents}
-        categories={allCategories}
-        registeredIds={registeredIds}
-      />
-    </Suspense>
-  );
+return (\n    <>\n      <Navbar />\n      <main className="student-page pt-8">\n        <Suspense fallback={<EventsLoading />}>\n          <EventsContent\n            events={allEvents}\n            categories={allCategories}\n            registeredIds={registeredIds}\n          />\n        </Suspense>\n      </main>\n      <Footer />\n    </>\n  );
 }
