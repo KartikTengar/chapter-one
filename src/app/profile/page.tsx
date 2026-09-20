@@ -113,7 +113,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--background)]">
+    <>
+      <Navbar />
+      <main className="student-page min-h-screen bg-[var(--background)]">
       <div className="max-container max-w-2xl mx-auto py-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-black text-[var(--foreground)] uppercase tracking-tight">
@@ -258,8 +260,8 @@ export default function ProfilePage() {
           )}
         </form>
       </div>
-    </main>
-    <Footer />
+      </main>
+      <Footer />
     </>
   );
 }
