@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "25", 10);
     const search = searchParams.get("search") || "";
+    const branch = searchParams.get("branch") || "";
     const status = (searchParams.get("status") || "all") as "not_started" | "active" | "completed" | "paused" | "all";
     const level = searchParams.get("level") === "all" ? "all" : parseInt(searchParams.get("level") || "0", 10);
     const sortBy = (searchParams.get("sortBy") || "total_points") as "total_points" | "current_level" | "completed_at" | "started_at";
@@ -22,6 +23,7 @@ export async function GET(request: Request) {
       page,
       pageSize,
       search,
+      branch,
       status,
       level,
       sortBy,
