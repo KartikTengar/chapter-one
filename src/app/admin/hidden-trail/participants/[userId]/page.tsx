@@ -66,6 +66,9 @@ export default function ParticipantDetailPage() {
                   <strong>Status</strong> {p?.status ?? "not_started"}
                 </div>
                 <div>
+                  <strong>Branch</strong> {p?.profiles?.branch ?? "—"}
+                </div>
+                <div>
                   <strong>Current Level</strong> {p?.current_level ?? 0}
                 </div>
                 <div>
