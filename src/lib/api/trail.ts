@@ -18,14 +18,27 @@ async function authHeaders(): Promise<Record<string, string>> {
 
 async function trailFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = await authHeaders();
-  const res = await fetch(`${getApiBaseUrl()}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...headers,
-      ...(init?.headers || {}),
-    },
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
+  const requestHeaders = new Headers(init?.headers);
+  if (!requestHeaders.has("Content-Type") && init?.body) requestHeaders.set("Content-Type", "application/json");
+  Object.entries(headers).forEach(([key, value]) => requestHeaders.set(key, value));
+  let res: Response;
+  try {
+    res = await fetch(`${getApiBaseUrl()}${path}`, {
+      ...init,
+      headers: requestHeaders,
+      cache: "no-store",
+      signal: init?.signal ?? controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiTrailError("TIMEOUT", "The request timed out. Please check your connection and try again.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
   if (!res.ok) {
     let data: unknown = null;
     try {
