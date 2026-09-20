@@ -299,7 +299,7 @@ export async function getLeaderboardAdmin(gameId?: string | null, limit: number 
 /**
  * Get scan logs for admin
  */
-export async function getScanLogsAdmin(gameId?: string | null, limit: number = 100) {
+export async function getScanLogsAdmin(gameId?: string | null, limit: number = 100, branch?: string) {
   const supabase = await createServerClient();
 
   const isAdmin = await verifyAdmin();
@@ -310,16 +310,22 @@ export async function getScanLogsAdmin(gameId?: string | null, limit: number = 1
   const resolved = await resolveHiddenTrailGameId(supabase, gameId);
   if (!resolved) return [];
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("qr_scan_logs")
     .select(`
       *,
       qr_levels(level_number, title),
-      profiles(full_name, email)
+      profiles!inner(full_name, email, branch)
     `)
     .eq("game_id", resolved)
     .order("created_at", { ascending: false })
     .limit(limit);
+
+  if (branch?.trim()) {
+    query = query.eq("profiles.branch", branch.trim());
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(`Failed to get scan logs: ${error.message}`);
@@ -719,9 +725,10 @@ export async function getParticipantsAdmin(
     started_at: string | null;
     last_scan_at: string | null;
     completed_at: string | null;
-    profiles: { full_name: string | null; email: string | null } | { full_name: string | null; email: string | null }[];
+    profiles: { full_name: string | null; email: string | null; branch: string | null } | { full_name: string | null; email: string | null; branch: string | null }[];
   }>).map(item => ({
     game_id: item.game_id,
+    branch: (Array.isArray(item.profiles) ? item.profiles[0]?.branch : item.profiles?.branch) ?? null,
     user_id: item.user_id,
     current_level: item.current_level,
     total_points: item.total_points,
