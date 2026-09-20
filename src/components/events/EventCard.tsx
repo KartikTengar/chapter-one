@@ -39,7 +39,7 @@ export function EventCard({ event, registered, href = `/events/${event.id}` }: E
     >
       <Link
         href={href}
-        className="block bg-[var(--surface)] border border-white/[0.06] rounded-xl overflow-hidden hover:border-[var(--accent)]/20 transition-colors group"
+        className="student-event-card block bg-[var(--surface)] border border-white/[0.06] rounded-xl overflow-hidden hover:border-[var(--accent)]/30 hover:shadow-[0_18px_50px_rgba(0,0,0,.2)] transition-all duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
       >
         <div className="relative aspect-[16/9] overflow-hidden bg-[var(--background)]">
           {event.image_url ? (
@@ -56,7 +56,7 @@ export function EventCard({ event, registered, href = `/events/${event.id}` }: E
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface)] via-transparent to-transparent" />
         </div>
-        <div className="p-4">
+        <div className="p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
               {event.category}
@@ -80,7 +80,7 @@ export function EventCard({ event, registered, href = `/events/${event.id}` }: E
               {formatTime(event.event_date)}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-xs text-zinc-500 mt-1">
+          <div className="flex items-start gap-2 text-xs text-zinc-500 mt-2">
             <span className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
               {event.location}
