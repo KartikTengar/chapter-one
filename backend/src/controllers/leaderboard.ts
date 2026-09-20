@@ -199,6 +199,7 @@ leaderboardRouter.get('/games/:slug', async (ctx) => {
   const { slug } = ctx.params;
   try {
     const admin = getAdmin();
+    const branch = typeof ctx.query.branch === 'string' ? ctx.query.branch.trim() : undefined;
 
     type GameEntry = { user_id: string; game_score: number; completed_at: string | null };
     let gameName = slug;
