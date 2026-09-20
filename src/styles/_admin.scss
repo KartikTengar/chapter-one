@@ -687,3 +687,177 @@
     font-size: var(--text-h4);
   }
 }
+
+
+/* ===== ADMIN RESPONSIVE SYSTEM ===== */
+.chapter-admin-content > * {
+  max-width: 100%;
+}
+
+.chapter-admin-card,
+.chapter-admin-empty,
+.chapter-admin-edit-section {
+  min-width: 0;
+}
+
+.chapter-admin-table-wrap,
+.chapter-admin-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chapter-admin-table-wrap .chapter-admin-table,
+.chapter-admin-table-wrapper .chapter-admin-table {
+  min-width: 680px;
+}
+
+.chapter-admin-btn {
+  min-height: 44px;
+  white-space: normal;
+  text-align: center;
+}
+
+.chapter-admin-form-field input,
+.chapter-admin-form-field textarea,
+.chapter-admin-form-field select,
+.chapter-admin-form input,
+.chapter-admin-form textarea,
+.chapter-admin-form select {
+  min-width: 0;
+  width: 100%;
+}
+
+.chapter-admin-edit-actions,
+.chapter-admin-card-footer,
+.chapter-admin-actions {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .chapter-admin-shell {
+    display: block;
+  }
+
+  .chapter-admin-sidebar {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: auto;
+    max-height: 9.5rem;
+    overflow: hidden;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .chapter-admin-sidebar-inner {
+    min-height: 0;
+  }
+
+  .chapter-admin-sidebar-header {
+    padding: 0.9rem 1rem;
+  }
+
+  .chapter-admin-sidebar-brand {
+    font-size: 1rem;
+  }
+
+  .chapter-admin-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem;
+    gap: 0.35rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .chapter-admin-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chapter-admin-nav > div {
+    display: contents;
+  }
+
+  .chapter-admin-nav-group-label {
+    display: none;
+  }
+
+  .chapter-admin-nav-link {
+    flex: 0 0 auto;
+    margin: 0;
+    border-radius: 999px;
+    padding: 0.6rem 0.8rem;
+    white-space: nowrap;
+    min-height: 42px;
+  }
+
+  .chapter-admin-sidebar-footer {
+    display: none;
+  }
+
+  .chapter-admin-content {
+    margin-left: 0;
+    padding: 1.25rem;
+    min-height: calc(100svh - 9.5rem);
+  }
+}
+
+@media (max-width: 600px) {
+  .chapter-admin-sidebar {
+    max-height: 7rem;
+  }
+
+  .chapter-admin-sidebar-header {
+    padding: 0.7rem 0.85rem;
+  }
+
+  .chapter-admin-content {
+    padding: 0.85rem;
+  }
+
+  .chapter-admin-card,
+  .chapter-admin-empty {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .chapter-admin-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .chapter-admin-stat-card {
+    padding: 0.9rem;
+  }
+
+  .chapter-admin-stat-value {
+    font-size: 1.4rem;
+  }
+
+  .chapter-admin-table {
+    min-width: 620px;
+  }
+
+  .chapter-admin-edit-form {
+    padding: 0.25rem;
+  }
+
+  .chapter-admin-edit-actions .chapter-admin-btn,
+  .chapter-admin-actions .chapter-admin-btn,
+  .chapter-admin-card-footer .chapter-admin-btn {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .chapter-admin-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chapter-admin-content {
+    padding: 0.7rem;
+  }
+}
