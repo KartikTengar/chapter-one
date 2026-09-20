@@ -4,20 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { HiddenTrailAdminShell } from "@/components/admin/hidden-trail/HiddenTrailAdminShell";
 import { getClientAdminUser } from "@/lib/hidden-trail/admin-client";
-
-type Participant = {
-  game_id: string;
-  user_id: string;
-  current_level: number;
-  total_points: number;
-  status: string;
-  started_at: string | null;
-  last_scan_at: string | null;
-  completed_at: string | null;
-  profiles:
-    | { full_name: string | null; email: string | null }
-    | null;
-};
+import { adminGetParticipants, type AdminParticipant } from "@/lib/api/trail";
 
 type ParticipantsResponse = {
   participants?: Participant[];
@@ -40,7 +27,7 @@ export default function ParticipantsPage() {
   const [gameLoading, setGameLoading] = useState(true);
   const [hasGame, setHasGame] = useState<boolean | null>(null);
   const [participantsLoading, setParticipantsLoading] = useState(false);
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [participants, setParticipants] = useState<AdminParticipant[]>([]);
   const [totalParticipants, setTotalParticipants] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,29 +100,11 @@ export default function ParticipantsPage() {
     setError(null);
 
     try {
-      const response = await fetch(
-        "/api/admin/hidden-trail/participants?page=1&pageSize=100&sortBy=total_points&sortOrder=desc",
-        {
-          cache: "no-store",
-          credentials: "include",
-        }
+      const data = await adminGetParticipants(1, 100);
+      setParticipants(data.participants ?? []);
+      setTotalParticipants(
+        data.pagination?.total ?? data.participants?.length ?? 0
       );
-
-      const data = (await response.json().catch(() => null)) as
-        | ParticipantsResponse
-        | { error?: string }
-        | null;
-
-      if (!response.ok) {
-        throw new Error(
-          (data && "error" in data && data.error) ||
-            "Failed to load participants"
-        );
-      }
-
-      const result = (data ?? {}) as ParticipantsResponse;
-      setParticipants(result.participants ?? []);
-      setTotalParticipants(result.pagination?.total ?? (result.participants?.length ?? 0));
     } catch (err) {
       setParticipants([]);
       setTotalParticipants(0);
@@ -146,6 +115,7 @@ export default function ParticipantsPage() {
       setParticipantsLoading(false);
     }
   }, []);
+
 
   useEffect(() => {
     if (hasGame) {
