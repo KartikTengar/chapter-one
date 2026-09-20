@@ -64,7 +64,7 @@ async function readApiError(res: Response): Promise<string> {
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const authHeaders = await getClientAuthHeaders();
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 15000);
+  const timeout = globalThis.setTimeout(() => controller.abort(), 15000);
   const headers = new Headers(init.headers);
 
   if (!headers.has("Content-Type") && !isBodylessMethod(init.method)) {
@@ -101,7 +101,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     }
     throw error;
   } finally {
-    window.clearTimeout(timeout);
+    globalThis.clearTimeout(timeout);
   }
 }
 
