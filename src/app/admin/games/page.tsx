@@ -106,7 +106,7 @@ export default function GamesPage() {
                   {games.map(g => (
                     <tr key={g.id}>
                       <td><Link href={`/admin/games/${g.id}`}>{g.name}</Link><div className="chapter-admin-help-text">{g.slug}</div></td>
-                      <td><span className={`chapter-admin-badge ${g.status === "running" ? "chapter-admin-badge--active" : ""}>{g.status}</span></td>
+                      <td><span className={`chapter-admin-badge ${g.status === "running" ? "chapter-admin-badge--active" : ""}`}>{g.status}</span></td>
                       <td>{g.is_current ? "Yes" : "No"}</td>
                       <td>{g.level_count ?? "—"}</td>
                       <td>{g.participant_count ?? "—"}</td>
