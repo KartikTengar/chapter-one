@@ -117,6 +117,7 @@ export interface TrailAnswerResult {
   is_completed: boolean;
   location_riddle: string | null;
   answer_riddle: string | null;
+  photo_feature_enabled: boolean;
   game_id: string;
   level_id: string;
 }
