@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { HiddenTrailAdminShell } from "@/components/admin/hidden-trail/HiddenTrailAdminShell";
 import { getClientAdminUser } from "@/lib/hidden-trail/admin-client";
 import { useRouter, useParams } from "next/navigation";
+import { BRANCH_LABELS } from "@/lib/profile/branches";
 
 export default function ParticipantDetailPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function ParticipantDetailPage() {
 
   useEffect(() => {
     getClientAdminUser().then(u => {
-      if (!u) router.replace("/login");
+      if (!u) router.replace("/admin/login");
       else setAdminUser(u);
       setLoading(false);
     });
@@ -57,6 +58,9 @@ export default function ParticipantDetailPage() {
               <div className="chapter-admin-row">
                 <div>
                   <strong>Email</strong> {profile?.email ?? "—"}
+                </div>
+                <div>
+                  <strong>Branch</strong> {p?.profiles?.branch ? BRANCH_LABELS[p.profiles.branch as keyof typeof BRANCH_LABELS] ?? p.profiles.branch : "—"}
                 </div>
                 <div>
                   <strong>Status</strong> {p?.status ?? "not_started"}
