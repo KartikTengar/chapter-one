@@ -8,20 +8,6 @@ import { getMasterLeaderboard } from "@/lib/api/leaderboard";
 import type { MasterLeaderboard } from "@/lib/api/leaderboard";
 import { BranchSelector } from "@/components/leaderboard/BranchSelector";
 
-type LeaderboardEntry = {
-  rank: number;
-  display_name?: string | null;
-  master_points: number;
-};
-
-type LeaderboardData = {
-  entries: LeaderboardEntry[];
-  me: {
-    rank?: number | null;
-    master_points: number;
-  } | null;
-};
-
 function Shell({ children }: { children: ReactNode }) {
   return (
     <main className="c1-leaderboard-page">
@@ -259,7 +245,7 @@ export default function MasterLeaderboardPage() {
                       </span>
                       <span className="c1-rank-meta">Master standing</span>
                     </div>
-                    <span className="c1-rank-score">{entry.master_points} pts</span>
+                    <span className="c1-rank-score">{entry.master_points ?? entry.score ?? 0} pts</span>
                   </li>
                 );
               })}
