@@ -1057,3 +1057,26 @@
     gap: 0.3rem;
   }
 }
+
+@media (max-width: 900px) {
+  .chapter-admin-sidebar-footer .auth-logout {
+    flex: 0 0 auto;
+  }
+
+  .chapter-admin-sidebar-footer .auth-logout > button {
+    width: auto !important;
+    white-space: nowrap;
+  }
+
+  .chapter-admin-sidebar-footer .auth-logout > p {
+    position: absolute;
+    right: 0.75rem;
+    top: 100%;
+    z-index: 60;
+    max-width: min(24rem, calc(100vw - 1.5rem));
+    padding: 0.5rem 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-btn);
+  }
+}
