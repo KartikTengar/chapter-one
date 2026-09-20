@@ -151,7 +151,7 @@ export default function HiddenTrailLeaderboard() {
             <BranchSelector value={selectedBranch} onChange={setSelectedBranch} />
           </div>
 
-          {/* 3D Podium */
+          {/* 3D Podium */}
           <div className="flex items-end justify-center gap-2 md:gap-6 mb-16 px-2">
             {top3.length >= 2 && (
               <div className="flex flex-col items-center gap-3 w-28 md:w-36">
