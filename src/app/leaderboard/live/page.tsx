@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getLiveLeaderboardTyped, type LiveLeaderboard, type LiveRecentEvent } from "@/lib/api/trail";
 import { BranchSelector } from "@/components/leaderboard/BranchSelector";
@@ -13,22 +13,23 @@ export default function LiveLeaderboardPage() {
   const [selectedBranch, setSelectedBranch] = useState("");
   const loadedOnce = useRef(false);
 
-  const refresh = useCallback(async () => {
-    try {
-      const d = await getLiveLeaderboardTyped(selectedBranch || undefined);
-      setData(d);
-      if (d.recent && d.recent.length > 0) {
-        setTicker(d.recent[0]);
-      }
-      loadedOnce.current = true;
-      setLoading(false);
-    } catch {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     let mounted = true;
+
+    const refresh = async () => {
+      try {
+        const d = await getLiveLeaderboardTyped(selectedBranch || undefined);
+        if (!mounted) return;
+        setData(d);
+        if (d.recent && d.recent.length > 0) {
+          setTicker(d.recent[0]);
+        }
+        loadedOnce.current = true;
+        setLoading(false);
+      } catch {
+        if (mounted) setLoading(false);
+      }
+    };
     const initialTimer = setTimeout(() => {
       if (mounted) refresh();
     }, 0);
@@ -65,7 +66,7 @@ export default function LiveLeaderboardPage() {
         // ignore
       }
     };
-  }, [refresh]);
+  }, [selectedBranch]);
 
   if (loading) {
     return (
