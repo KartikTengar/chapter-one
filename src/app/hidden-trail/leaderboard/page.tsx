@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Trophy, Crown, Medal, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
@@ -22,7 +21,6 @@ interface LeaderboardEntry {
 }
 
 export default function HiddenTrailLeaderboard() {
-  const router = useRouter();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [myRank, setMyRank] = useState<string | null>(null);
   const [selectedBranch, setSelectedBranch] = useState("");
@@ -68,7 +66,7 @@ export default function HiddenTrailLeaderboard() {
     };
     init();
     return () => { mounted = false; };
-  }, [router]);
+  }, [selectedBranch]);
 
   const top3 = leaderboard.slice(0, 3);
 
