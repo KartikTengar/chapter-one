@@ -1,39 +1,79 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { SignJWT } from 'jose';
-import { verifySupabaseToken } from '../src/services/supabase';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 
-const TEST_SECRET = 'testsecret';
-const testSecretKey = new TextEncoder().encode(TEST_SECRET);
+// Mock the Supabase admin client before importing the module
+const mockGetUser = vi.fn();
+
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: vi.fn(() => ({
+    auth: {
+      getUser: mockGetUser,
+    },
+  })),
+}));
+
+import { verifySupabaseToken } from '../src/services/supabase';
 
 beforeAll(() => {
   process.env.SUPABASE_URL = 'https://example.supabase.co';
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'dummy';
-  process.env.SUPABASE_JWT_SECRET = TEST_SECRET;
 });
 
 describe('Supabase token verification', () => {
-  it('verifies a valid token and returns payload', async () => {
-    const token = await new SignJWT({
-      sub: 'user123',
-      email: 'test@example.com',
-      role: 'admin',
-      foo: 'bar'
-    })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuer('supabase')
-      .setAudience('authenticated')
-      .setExpirationTime('1h')
-      .sign(testSecretKey);
-
-    const payload = await verifySupabaseToken(token);
-    expect(payload.sub).toBe('user123');
-    expect(payload.email).toBe('test@example.com');
-    expect(payload.role).toBe('admin');
-    expect(payload.foo).toBe('bar');
+  beforeEach(() => {
+    mockGetUser.mockReset();
   });
 
-  it('throws when token is invalid', async () => {
-    const badToken = 'invalid.token.value';
-    await expect(verifySupabaseToken(badToken)).rejects.toThrow('Invalid token');
+  it('verifies a valid token and returns payload', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: {
+          id: 'user123',
+          email: 'test@example.com',
+          role: 'authenticated',
+        },
+      },
+      error: null,
+    });
+
+    const payload = await verifySupabaseToken('valid-token');
+    expect(payload.sub).toBe('user123');
+    expect(payload.email).toBe('test@example.com');
+    expect(payload.role).toBe('authenticated');
+  });
+
+  it('returns user data with all fields from Supabase', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: {
+          id: 'user456',
+          email: 'another@test.com',
+          role: 'authenticated',
+        },
+      },
+      error: null,
+    });
+
+    const payload = await verifySupabaseToken('valid-token');
+    expect(payload.sub).toBe('user456');
+    expect(payload.email).toBe('another@test.com');
+    expect(payload.role).toBe('authenticated');
+  });
+
+  it('throws when token is invalid (Supabase returns error)', async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: null },
+      error: { message: 'Invalid JWT' },
+    });
+
+    await expect(verifySupabaseToken('invalid-token')).rejects.toThrow('Invalid token');
+  });
+
+  it('throws when token is invalid (Supabase returns no user)', async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: null },
+      error: null,
+    });
+
+    await expect(verifySupabaseToken('invalid-token')).rejects.toThrow('Invalid token');
   });
 });
