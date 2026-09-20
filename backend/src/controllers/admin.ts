@@ -71,7 +71,7 @@ adminRouter.get("/participants", async (ctx) => {
     const participants = (data ?? []).map((row) => {
       const r = row as Record<string, unknown>;
       const profile = Array.isArray(r.profiles)
-        ? (r.profiles[0] as { full_name?: string | null; email?: string | null } | undefined)
+        ? (r.profiles[0] as { full_name?: string | null; email?: string | null; branch?: string | null } | undefined)
         : (r.profiles as { full_name?: string | null; email?: string | null } | undefined);
 
       return {
