@@ -2,17 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { getMasterLeaderboard } from "@/lib/api/leaderboard";
+import { BranchSelector } from "@/components/leaderboard/BranchSelector";
 
 export default function MasterLeaderboardPage() {
   const [data, setData] = useState({
     entries: [] as any[],
     me: null as any | null,
   });
+  const [selectedBranch, setSelectedBranch] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getMasterLeaderboard().then((res) => { if (res) setData(res); }).finally(() => setLoading(false));
-  }, []);
+    setLoading(true);
+    getMasterLeaderboard(selectedBranch || undefined)
+      .then((res) => { if (res) setData(res); })
+      .finally(() => setLoading(false));
+  }, [selectedBranch]);
 
   if (loading) {
     return (
@@ -47,6 +52,8 @@ export default function MasterLeaderboardPage() {
         </p>
 
         <div className="mb-8">
+          <BranchSelector value={selectedBranch} onChange={setSelectedBranch} />
+        </div>
           {data.me ? (
             <>
               <div className="flex items-center gap-2 mb-2">
