@@ -23,13 +23,13 @@ export function MobileNav() {
   }, []);
 
   return (
-    <header className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-[var(--background)]/90 backdrop-blur-xl border-b border-white/[0.06]">
-      <div className="flex items-center justify-between h-16 px-4">
+    <header className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-[var(--background)]/90 backdrop-blur-xl border-b border-white/[0.06] safe-top">
+      <div className="flex items-center justify-between h-16 pl-16 pr-4 sm:px-5">
         <span className="text-lg font-black tracking-wider text-[var(--foreground)] uppercase">
           CHAPTER ONE
         </span>
         <div className="flex items-center gap-3">
-          <button className="relative rounded-full p-2 text-zinc-400 hover:text-[var(--accent)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
+          <button aria-label="Notifications" className="relative rounded-full p-2 min-w-11 min-h-11 flex items-center justify-center text-zinc-400 hover:text-[var(--accent)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
             <Bell className="h-5 w-5" />
           </button>
           <a
