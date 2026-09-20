@@ -72,7 +72,7 @@ adminRouter.get("/participants", async (ctx) => {
       const r = row as Record<string, unknown>;
       const profile = Array.isArray(r.profiles)
         ? (r.profiles[0] as { full_name?: string | null; email?: string | null; branch?: string | null } | undefined)
-        : (r.profiles as { full_name?: string | null; email?: string | null } | undefined);
+        : (r.profiles as { full_name?: string | null; email?: string | null; branch?: string | null } | undefined);
 
       return {
         game_id: r.game_id,
