@@ -53,7 +53,9 @@ export default async function EventDetailPage({
   const cap = capacity ?? { registered: 0, max: null };
 
   return (
-    <main className="flex-1">
+    <>
+      <Navbar />
+      <main className="student-page pt-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-4xl mx-auto">
           <Link
@@ -154,5 +156,7 @@ export default async function EventDetailPage({
         </div>
       </div>
     </main>
+    <Footer />
+    </>
   );
 }
