@@ -30,12 +30,16 @@ export default function NewGamePage() {
     setError(null);
     try {
       const finalSlug = isHiddenTrail ? "hidden-trail" : slug;
-      const data = await gamesClient.create({ name, slug: finalSlug, description });
-      const gameId = data.data as string;
+      const response = await gamesClient.create({ name, slug: finalSlug, description });
+      const game = response.data;
+      
+      if (!game.id) {
+        throw new Error("Created game is missing ID");
+      }
       
       // If marked as Hidden Trail game, set it as current
       if (isHiddenTrail) {
-        await gamesClient.setCurrent(gameId);
+        await gamesClient.setCurrent(game.id);
       }
       
       router.push("/admin/games");
