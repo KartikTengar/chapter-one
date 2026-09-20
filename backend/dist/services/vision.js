@@ -1,45 +1,44 @@
-import { ImageAnnotatorClient } from '@google-cloud/vision';
-let visionClient = null;
-function getVisionClient() {
-    if (visionClient)
-        return visionClient;
-    const credentialsJson = process.env.GOOGLE_VISION_CREDENTIALS_JSON;
-    if (!credentialsJson) {
-        console.warn('[Vision] GOOGLE_VISION_CREDENTIALS_JSON not set; Vision fallback disabled');
-        return null;
-    }
-    try {
-        const credentials = JSON.parse(credentialsJson);
-        visionClient = new ImageAnnotatorClient({ credentials });
-        return visionClient;
-    }
-    catch (e) {
-        console.error('[Vision] Failed to parse GOOGLE_VISION_CREDENTIALS_JSON', e);
-        return null;
-    }
+import QRCode from 'qrcode-reader';
+import { Jimp } from 'jimp';
+function decodeWithQrcodeReader(imageBuffer) {
+    return new Promise((resolve) => {
+        Jimp.read(imageBuffer)
+            .then((image) => {
+            const qr = new QRCode();
+            qr.callback = (err, result) => {
+                if (err || !result?.result) {
+                    resolve(null);
+                    return;
+                }
+                resolve({ text: result.result.trim(), confidence: 1.0 });
+            };
+            qr.decode(image.bitmap);
+        })
+            .catch(() => resolve(null));
+    });
 }
 export async function decodeQrFromImage(imageBuffer, mimeType) {
-    const client = getVisionClient();
-    if (!client) {
+    if (!imageBuffer || imageBuffer.length === 0) {
+        return null;
+    }
+    if (imageBuffer.length > 10 * 1024 * 1024) {
+        console.warn('[Vision] Image too large for QR decoding, skipping');
         return null;
     }
     try {
-        const [result] = await client.documentTextDetection({
-            image: { content: imageBuffer.toString('base64') },
-        });
-        const fullText = result.fullTextAnnotation?.text ?? '';
-        if (!fullText.trim()) {
-            return null;
+        const result = await decodeWithQrcodeReader(imageBuffer);
+        if (result?.text) {
+            console.log('[Vision] QR decoded successfully via qrcode-reader');
+            return result;
         }
-        const confidence = result.fullTextAnnotation?.pages?.[0]?.blocks?.[0]?.confidence ?? 0;
-        return { text: fullText.trim(), confidence };
+        return null;
     }
     catch (e) {
-        console.error('[Vision] Document text detection failed', e);
+        console.error('[Vision] QR decoding failed', e);
         return null;
     }
 }
 export function isVisionAvailable() {
-    return !!getVisionClient();
+    return true;
 }
 //# sourceMappingURL=vision.js.map

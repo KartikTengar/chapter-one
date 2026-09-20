@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { jwtVerify } from 'jose';
 import { config } from 'dotenv';
 import { resolve } from 'path';
 // Load backend environment variables for development
@@ -9,15 +8,8 @@ if (process.env.NODE_ENV !== 'production') {
 }
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-function getJwtSecret() {
-    const secret = process.env.SUPABASE_JWT_SECRET;
-    if (!secret) {
-        throw new Error('SUPABASE_JWT_SECRET not set');
-    }
-    return new TextEncoder().encode(secret);
-}
 // Service role client for backend operations (bypasses RLS)
-// Lazy create a Service‑role client; not required for JWT verification tests
+// Lazy create a Service‑role client
 export function getSupabaseAdmin() {
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
         return null;
@@ -35,33 +27,17 @@ export function getSupabaseAdmin() {
  * @returns Promise resolving to user payload or throwing error
  */
 export async function verifySupabaseToken(token) {
-    try {
-        // Prefer the local JWT secret when configured (fast, no network).
-        if (process.env.SUPABASE_JWT_SECRET) {
-            const { payload } = await jwtVerify(token, getJwtSecret(), {
-                issuer: 'supabase',
-                audience: 'authenticated',
-            });
-            return payload;
-        }
-        // Fallback: validate the token against Supabase Auth via the service-role
-        // client (the Auth server validates the JWT). This does not require the
-        // JWT secret to be present in the environment.
-        const admin = getSupabaseAdmin();
-        if (!admin)
-            throw new Error('Supabase admin client not configured');
-        const { data, error } = await admin.auth.getUser(token);
-        if (error || !data.user)
-            throw new Error('Invalid token');
-        return {
-            sub: data.user.id,
-            email: data.user.email ?? '',
-            role: data.user.role ?? 'authenticated',
-        };
-    }
-    catch (err) {
-        throw new Error(`Invalid token: ${err instanceof Error ? err.message : String(err)}`);
-    }
+    const admin = getSupabaseAdmin();
+    if (!admin)
+        throw new Error('Supabase admin client not configured');
+    const { data, error } = await admin.auth.getUser(token);
+    if (error || !data.user)
+        throw new Error('Invalid token');
+    return {
+        sub: data.user.id,
+        email: data.user.email ?? '',
+        role: data.user.role ?? 'authenticated',
+    };
 }
 /**
  * Extract and verify user from request headers
@@ -77,11 +53,10 @@ export async function getUserFromRequest(ctx) {
     try {
         const payload = await verifySupabaseToken(token);
         return {
-            id: payload.sub,
-            email: payload.email || '',
-            role: payload.role || 'authenticated',
-            // Include any custom claims
             ...payload,
+            id: payload.sub,
+            email: payload.email,
+            role: payload.role,
         };
     }
     catch {

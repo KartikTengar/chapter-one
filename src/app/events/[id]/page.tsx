@@ -8,6 +8,8 @@ import { checkRegistration } from "@/lib/supabase/dashboard";
 import { requireUser } from "@/lib/supabase/server";
 import { Calendar, MapPin, Clock, Users } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 async function getEventData(eventId: string) {
   const [event, capacity] = await Promise.all([
     getEventDetail(eventId),

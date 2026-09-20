@@ -5,6 +5,8 @@ import { createServerClient } from "@/lib/supabase/server";
 import { HiddenTrailQrPoster } from "@/components/hidden-trail/HiddenTrailQrPoster";
 import "@/styles/_qr-poster.scss";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Canonical event-accessible origin for QR payloads.
  *
