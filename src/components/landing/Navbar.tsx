@@ -220,11 +220,12 @@ export function Navbar() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: var(--space-5);
+          gap: var(--space-4);
+          width: 100%;
           height: var(--space-8);
           max-width: calc(var(--space-10) * 11);
           margin-inline: auto;
-          padding-inline: var(--space-4);
+          padding-inline: max(var(--space-4), env(safe-area-inset-left)) max(var(--space-4), env(safe-area-inset-right));
         }
         :global(.navbar .wordmark), .mobile-top .wordmark {
           display: inline-flex;
@@ -344,7 +345,7 @@ export function Navbar() {
         .mobile-menu[open] { display: flex; flex-direction: column; }
         .mobile-menu::backdrop { background: var(--bg); }
         .mobile-top { box-sizing: border-box; width: 100%; flex-shrink: 0; border-bottom: 1px solid var(--border); }
-        .mobile-navigation { width: 100%; box-sizing: border-box; margin-block: auto; padding: var(--space-7) var(--space-5); }
+        .mobile-navigation { width: 100%; box-sizing: border-box; margin-block: auto; padding: max(var(--space-7), env(safe-area-inset-top)) max(var(--space-5), env(safe-area-inset-right)) max(var(--space-7), env(safe-area-inset-bottom)) max(var(--space-5), env(safe-area-inset-left)); }
         .menu-eyebrow { margin: 0 0 var(--space-5); font-size: var(--text-meta); letter-spacing: 0.16em; color: var(--muted); }
         .mobile-links { list-style: none; padding: 0; margin: 0; }
         .mobile-links li { border-bottom: 1px solid var(--border); }
@@ -372,12 +373,36 @@ export function Navbar() {
           .navbar-inner, .mobile-top { padding-inline: var(--space-5); }
           .mobile-navigation { padding-inline: var(--space-7); }
         }
-        @media (min-width: 1024px) {
+        /* Navigation stays compact until there is enough room for every destination.
+           This prevents the desktop link row from horizontally overflowing on tablets
+           and narrow landscape phones. */
+        @media (min-width: 1200px) {
           .navbar-inner { padding-inline: var(--space-7); }
           .radial-menu { justify-content: center; }
           .desktop-links, .desktop-actions { display: flex; }
           .menu-trigger { display: none; }
           .account-link { display: none; }
+        }
+
+        @media (max-width: 1199px) {
+          .radial-menu { display: none; }
+          .menu-trigger { display: inline-flex; }
+          .navbar-inner { padding-inline: var(--space-4); }
+        }
+
+        @media (max-width: 639px) {
+          .navbar,
+          .navbar-inner { height: 64px; }
+          .navbar-spacer.is-enhanced { height: 64px; }
+          .navbar-inner { padding-inline: 14px; }
+          :global(.navbar .wordmark) { gap: 6px; }
+          .chapter { font-size: 1.18rem; }
+          .one { font-size: .72rem; letter-spacing: .14em; }
+          .icon-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+          }
         }
         @media (prefers-reduced-motion: reduce) {
           .navbar, :global(.navbar .nav-link), :global(.mobile-menu .mobile-link) { transition: none; }
