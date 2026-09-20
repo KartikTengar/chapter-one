@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 
 interface HiddenTrailAdminShellProps {
@@ -11,6 +12,12 @@ interface HiddenTrailAdminShellProps {
 
 export function HiddenTrailAdminShell({ children, adminUser }: HiddenTrailAdminShellProps) {
   const pathname = usePathname();
+  const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const active = navRef.current?.querySelector<HTMLElement>(".chapter-admin-nav-link.is-active");
+    active?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [pathname]);
 
   const navLinkClass = (active: boolean) =>
     `chapter-admin-nav-link ${active ? "is-active" : ""}`;
@@ -22,89 +29,60 @@ export function HiddenTrailAdminShell({ children, adminUser }: HiddenTrailAdminS
           <div className="chapter-admin-sidebar-header">
             <span className="chapter-admin-sidebar-brand">CHAPTER ONE ADMIN</span>
           </div>
-          <nav className="chapter-admin-nav">
-<div>
-               <p className="chapter-admin-nav-group-label">Game Management</p>
-               <Link href="/admin/games" className={navLinkClass(pathname.startsWith("/admin/games"))}>
-                 <span>🎮</span>
-                 Games
-               </Link>
-             </div>
-             <div>
-               <p className="chapter-admin-nav-group-label">Overview</p>
-              <Link href="/admin/hidden-trail" className={navLinkClass(pathname === "/admin/hidden-trail")}>
-                <span>📊</span>
-                Overview
+          <nav ref={navRef} className="chapter-admin-nav" aria-label="Admin navigation">
+            <div>
+              <p className="chapter-admin-nav-group-label">Workspace</p>
+              <Link href="/admin" aria-current={pathname === "/admin" ? "page" : undefined} className={navLinkClass(pathname === "/admin")}>
+                <span aria-hidden="true">⌂</span> Dashboard
+              </Link>
+              <Link href="/admin/users" aria-current={pathname.startsWith("/admin/users") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/users"))}>
+                <span aria-hidden="true">👥</span> Users
+              </Link>
+              <Link href="/admin/events" aria-current={pathname.startsWith("/admin/events") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/events"))}>
+                <span aria-hidden="true">📅</span> Events
+              </Link>
+              <Link href="/admin/registrations" aria-current={pathname.startsWith("/admin/registrations") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/registrations"))}>
+                <span aria-hidden="true">📝</span> Registrations
+              </Link>
+              <Link href="/admin/games" aria-current={pathname.startsWith("/admin/games") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/games"))}>
+                <span aria-hidden="true">🎮</span> Games
               </Link>
             </div>
+
             <div>
-              <p className="chapter-admin-nav-group-label">Settings</p>
-              <Link href="/admin/hidden-trail/settings" className={navLinkClass(pathname === "/admin/hidden-trail/settings")}>
-                <span>⚙️</span>
-                Settings
+              <p className="chapter-admin-nav-group-label">Hidden Trail</p>
+              <Link href="/admin/hidden-trail" aria-current={pathname === "/admin/hidden-trail" ? "page" : undefined} className={navLinkClass(pathname === "/admin/hidden-trail")}>
+                <span aria-hidden="true">📊</span> Overview
               </Link>
-            </div>
-            <div>
-              <p className="chapter-admin-nav-group-label">Levels</p>
-              <Link href="/admin/hidden-trail/levels" className={navLinkClass(pathname.startsWith("/admin/hidden-trail/levels"))}>
-                <span>📐</span>
-                Levels
+              <Link href="/admin/hidden-trail/settings" aria-current={pathname.startsWith("/admin/hidden-trail/settings") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/hidden-trail/settings"))}>
+                <span aria-hidden="true">⚙️</span> Settings
               </Link>
-            </div>
-            <div>
-              <p className="chapter-admin-nav-group-label">QR Management</p>
-              <Link href="/admin/hidden-trail/qr" className={navLinkClass(pathname === "/admin/hidden-trail/qr")}>
-                <span>📱</span>
-                QR Codes
+              <Link href="/admin/hidden-trail/levels" aria-current={pathname.startsWith("/admin/hidden-trail/levels") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/hidden-trail/levels"))}>
+                <span aria-hidden="true">📐</span> Levels
               </Link>
-            </div>
-            <div>
-              <p className="chapter-admin-nav-group-label">Leaderboard</p>
-              <Link href="/admin/hidden-trail/leaderboard" className={navLinkClass(pathname.startsWith("/admin/hidden-trail/leaderboard"))}>
-                <span>🏆</span>
-                Leaderboard
+              <Link href="/admin/hidden-trail/qr" aria-current={pathname.startsWith("/admin/hidden-trail/qr") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/hidden-trail/qr"))}>
+                <span aria-hidden="true">📱</span> QR Codes
               </Link>
-            </div>
-            <div>
-              <p className="chapter-admin-nav-group-label">Participants</p>
-              <Link href="/admin/hidden-trail/participants" className={navLinkClass(pathname.startsWith("/admin/hidden-trail/participants"))}>
-                <span>👥</span>
-                Participants
+              <Link href="/admin/hidden-trail/leaderboard" aria-current={pathname.startsWith("/admin/hidden-trail/leaderboard") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/hidden-trail/leaderboard"))}>
+                <span aria-hidden="true">🏆</span> Leaderboard
               </Link>
-            </div>
-            <div>
-              <p className="chapter-admin-nav-group-label">Photos</p>
-              <Link href="/admin/hidden-trail/photos" className={navLinkClass(pathname.startsWith("/admin/hidden-trail/photos"))}>
-                <span>📸</span>
-                Photos
+              <Link href="/admin/hidden-trail/participants" aria-current={pathname.startsWith("/admin/hidden-trail/participants") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/hidden-trail/participants"))}>
+                <span aria-hidden="true">👤</span> Participants
               </Link>
-            </div>
-            <div>
-              <p className="chapter-admin-nav-group-label">Live Monitor</p>
-              <Link href="/admin/hidden-trail/live" className={navLinkClass(pathname === "/admin/hidden-trail/live")}>
-                <span>👁️</span>
-                Live Monitor
+              <Link href="/admin/hidden-trail/photos" aria-current={pathname.startsWith("/admin/hidden-trail/photos") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/hidden-trail/photos"))}>
+                <span aria-hidden="true">📸</span> Photos
               </Link>
-            </div>
-            <div>
-              <p className="chapter-admin-nav-group-label">Analytics</p>
-              <Link href="/admin/hidden-trail/analytics" className={navLinkClass(pathname === "/admin/hidden-trail/analytics")}>
-                <span>📈</span>
-                Analytics
+              <Link href="/admin/hidden-trail/live" aria-current={pathname.startsWith("/admin/hidden-trail/live") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/hidden-trail/live"))}>
+                <span aria-hidden="true">👁️</span> Live Monitor
               </Link>
-            </div>
-            <div>
-              <p className="chapter-admin-nav-group-label">Audit</p>
-              <Link href="/admin/hidden-trail/audit" className={navLinkClass(pathname === "/admin/hidden-trail/audit")}>
-                <span>📋</span>
-                Audit Log
+              <Link href="/admin/hidden-trail/analytics" aria-current={pathname.startsWith("/admin/hidden-trail/analytics") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/hidden-trail/analytics"))}>
+                <span aria-hidden="true">📈</span> Analytics
               </Link>
-            </div>
-            <div>
-              <p className="chapter-admin-nav-group-label">Simulation</p>
-              <Link href="/admin/hidden-trail/simulation" className={navLinkClass(pathname === "/admin/hidden-trail/simulation")}>
-                <span>🧪</span>
-                Simulation
+              <Link href="/admin/hidden-trail/audit" aria-current={pathname.startsWith("/admin/hidden-trail/audit") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/hidden-trail/audit"))}>
+                <span aria-hidden="true">📋</span> Audit Log
+              </Link>
+              <Link href="/admin/hidden-trail/simulation" aria-current={pathname.startsWith("/admin/hidden-trail/simulation") ? "page" : undefined} className={navLinkClass(pathname.startsWith("/admin/hidden-trail/simulation"))}>
+                <span aria-hidden="true">🧪</span> Simulation
               </Link>
             </div>
           </nav>
